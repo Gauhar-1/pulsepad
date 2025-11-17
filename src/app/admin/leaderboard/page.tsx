@@ -32,6 +32,9 @@ import {
   MoreVertical,
   ArrowUp,
   ArrowDown,
+  LineChart,
+  Percent,
+  Sigma,
 } from 'lucide-react';
 import type { User as UserType } from '@/lib/definitions';
 import { useEffect, useState, useMemo } from 'react';
@@ -46,6 +49,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+
 
 type Candidate = {
   rank: number;
@@ -234,6 +239,98 @@ const Candidates = ({ candidates, searchQuery }: { candidates: Candidate[], sear
     </Card>
 );
 
+const Insights = ({ candidates }: { candidates: Candidate[] }) => {
+    const insightsData = useMemo(() => {
+        const totalCandidates = candidates.length;
+        const totalScore = candidates.reduce((acc, c) => acc + c.totalScore, 0);
+        const averageScore = totalCandidates > 0 ? (totalScore / totalCandidates) : 0;
+        const topScore = Math.max(...candidates.map(c => c.totalScore), 0);
+
+        const scoreDistribution = candidates.reduce((acc, c) => {
+            const score = c.totalScore;
+            const bin = Math.floor(score / 5) * 5;
+            const range = `${bin}-${bin + 4}`;
+            acc[range] = (acc[range] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+
+        const chartData = Object.entries(scoreDistribution).map(([name, value]) => ({ name, value })).sort((a, b) => {
+            const a_val = parseInt(a.name.split('-')[0]);
+            const b_val = parseInt(b.name.split('-')[0]);
+            return a_val - b_val;
+        });
+
+        return { totalCandidates, averageScore, topScore, chartData };
+    }, [candidates]);
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="rounded-2xl shadow-lg">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Candidates</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{insightsData.totalCandidates}</div>
+                </CardContent>
+            </Card>
+            <Card className="rounded-2xl shadow-lg">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                    <Sigma className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{insightsData.averageScore.toFixed(2)}</div>
+                </CardContent>
+            </Card>
+            <Card className="rounded-2xl shadow-lg">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Top Score</CardTitle>
+                    <Trophy className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{insightsData.topScore}</div>
+                </CardContent>
+            </Card>
+            <Card className="rounded-2xl shadow-lg">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+                    <Percent className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">100%</div>
+                    <p className="text-xs text-muted-foreground">All candidates completed</p>
+                </CardContent>
+            </Card>
+
+            <Card className="rounded-2xl shadow-lg col-span-1 md:col-span-2 lg:col-span-4">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <LineChart className="h-5 w-5"/>
+                        Score Distribution
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="pl-2">
+                    <ResponsiveContainer width="100%" height={350}>
+                        <RechartsBarChart data={insightsData.chartData}>
+                            <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: 'hsl(var(--background))',
+                                    borderRadius: 'var(--radius)',
+                                    border: '1px solid hsl(var(--border))',
+                                }}
+                            />
+                            <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        </RechartsBarChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
 
 const tabs = [
     { name: 'Candidates', icon: Users },
@@ -348,9 +445,11 @@ export default function LeaderboardPage() {
           />
         )}
         {activeTab === 'Candidates' && <Candidates candidates={sortedCandidates} searchQuery={searchQuery} />}
-        {activeTab === 'Insights' && <Card className="rounded-2xl shadow-lg"><CardHeader><CardTitle>Insights</CardTitle></CardHeader><CardContent><p>Insights will be shown here.</p></CardContent></Card>}
+        {activeTab === 'Insights' && <Insights candidates={mockCandidates} />}
       </main>
 
     </div>
   );
 }
+
+    
