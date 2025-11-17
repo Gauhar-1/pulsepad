@@ -18,7 +18,7 @@ import type { User } from '@/lib/definitions';
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '#', label: 'Reports', icon: FileText },
+  { href: '/dashboard/reports', label: 'Reports', icon: FileText },
   { href: '#', label: 'Settings', icon: Settings },
 ];
 
