@@ -100,7 +100,7 @@ export function CreateProjectSheet({
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
                 <ScrollArea className="flex-1 pr-6 -mr-6">
                     <div className="space-y-6 py-4">
                         <div className="grid grid-cols-2 gap-4">
