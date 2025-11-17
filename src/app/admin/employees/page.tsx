@@ -33,7 +33,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CreateEmployeeSheet } from '@/components/admin/create-employee-sheet';
-import { ViewEmployeeDialog } from '@/components/admin/view-employee-dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,15 +44,16 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { mockEmployeeData } from '@/lib/mock-data';
+import { useRouter } from 'next/navigation';
 
 
 export default function AdminEmployeesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [employees, setEmployees] = useState<Employee[]>(mockEmployeeData);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const router = useRouter();
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(e => 
@@ -74,8 +74,7 @@ export default function AdminEmployeesPage() {
   };
 
   const handleViewClick = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setIsViewDialogOpen(true);
+    router.push(`/admin/employees/${employee.id}`);
   };
 
   const handleDeactivateClick = (employee: Employee) => {
@@ -207,11 +206,6 @@ export default function AdminEmployeesPage() {
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         onSaveEmployee={handleSaveEmployee}
-        employee={selectedEmployee}
-      />
-      <ViewEmployeeDialog
-        open={isViewDialogOpen}
-        onOpenChange={setIsViewDialogOpen}
         employee={selectedEmployee}
       />
        <AlertDialog open={isDeactivateDialogOpen} onOpenChange={setIsDeactivateDialogOpen}>
