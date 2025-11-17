@@ -68,6 +68,127 @@ const mockCandidates: Candidate[] = [
   { rank: 14, id: 'IFA4999843YL6', name: 'Divya Darsini', avatarUrl: '', college: 'SRM Univeristy of Science and Technology', totalScore: 6, unblockMe: 2, minesweeper: 0, waterCapacity: 2, completed: '16/11/2025' },
 ];
 
+const Leaderboard = ({ candidates, searchQuery }: { candidates: Candidate[], searchQuery: string }) => (
+  <Card className="rounded-2xl shadow-lg">
+    <CardHeader>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+           <Trophy className="h-8 w-8 text-yellow-500"/>
+           <div>
+              <CardTitle className="text-xl">Assessment Leaderboard</CardTitle>
+              <CardDescription>Top performers ranked by total score</CardDescription>
+           </div>
+        </div>
+        <Button variant="outline">
+          <Download className="mr-2 h-4 w-4" /> Export
+        </Button>
+      </div>
+      <div className="relative mt-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Input 
+          placeholder="Search leaderboard..." 
+          className="pl-10"
+          value={searchQuery}
+          readOnly
+        />
+      </div>
+      <div className="flex items-center gap-4 mt-4">
+        <span className="text-sm font-medium text-muted-foreground">Sort by:</span>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+          {sortOptions.map(opt => (
+            <Button key={opt.name} variant="outline" size="sm" className="bg-white rounded-full">
+              <opt.icon className="mr-2 h-4 w-4" />
+              {opt.name}
+            </Button>
+          ))}
+        </div>
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Rank</TableHead>
+              <TableHead>Candidate ID</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>College</TableHead>
+              <TableHead>Total Score</TableHead>
+              <TableHead><Puzzle className="h-5 w-5 mx-auto" /></TableHead>
+              <TableHead><Box className="h-5 w-5 mx-auto" /></TableHead>
+              <TableHead><Droplets className="h-5 w-5 mx-auto" /></TableHead>
+              <TableHead>Completed</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {candidates.map((candidate) => (
+              <TableRow key={candidate.id}>
+                <TableCell className="font-bold text-lg text-primary">#{candidate.rank}</TableCell>
+                <TableCell className="text-muted-foreground">{candidate.id}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={candidate.avatarUrl} />
+                      <AvatarFallback>{candidate.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{candidate.name}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{candidate.college}</TableCell>
+                <TableCell className="font-bold text-lg text-green-600">{candidate.totalScore}</TableCell>
+                <TableCell className="text-center text-blue-500 font-semibold">{candidate.unblockMe}</TableCell>
+                <TableCell className="text-center text-orange-500 font-semibold">{candidate.minesweeper}</TableCell>
+                <TableCell className="text-center text-teal-500 font-semibold">{candidate.waterCapacity}</TableCell>
+                <TableCell className="text-muted-foreground">{candidate.completed}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const Candidates = ({ candidates, searchQuery }: { candidates: Candidate[], searchQuery: string }) => (
+    <Card className="rounded-2xl shadow-lg">
+        <CardHeader>
+            <div className="flex items-center gap-3">
+                <Users className="h-8 w-8 text-primary"/>
+                <div>
+                    <CardTitle className="text-xl">Candidates</CardTitle>
+                    <CardDescription>Manage and view all candidates</CardDescription>
+                </div>
+            </div>
+            <div className="relative mt-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input 
+                    placeholder="Search candidates..." 
+                    className="pl-10"
+                    value={searchQuery}
+                    readOnly
+                />
+            </div>
+        </CardHeader>
+        <CardContent>
+            <p>Candidate management interface will be here.</p>
+        </CardContent>
+    </Card>
+);
+
+
+const tabs = [
+    { name: 'Candidates', icon: Users },
+    { name: 'Leaderboard', icon: BarChart },
+    { name: 'Insights', icon: TrendingUp },
+];
+
+const sortOptions = [
+    { name: 'Total Score', icon: Trophy },
+    { name: 'Unblock Me', icon: Puzzle },
+    { name: 'Minesweeper', icon: Box },
+    { name: 'Water Capacity', icon: Droplets },
+];
+
 export default function LeaderboardPage() {
   const [activeTab, setActiveTab] = useState('Leaderboard');
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,21 +203,6 @@ export default function LeaderboardPage() {
     );
     setCandidates(filtered);
   }, [searchQuery]);
-
-
-  const tabs = [
-    { name: 'Candidates', icon: Users },
-    { name: 'Leaderboard', icon: BarChart },
-    { name: 'Insights', icon: TrendingUp },
-    { name: 'Back to Overview', icon: ArrowLeft, action: () => router.push('/dashboard') },
-  ];
-
-  const sortOptions = [
-    { name: 'Total Score', icon: Trophy },
-    { name: 'Unblock Me', icon: Puzzle },
-    { name: 'Minesweeper', icon: Box },
-    { name: 'Water Capacity', icon: Droplets },
-  ];
   
   const handleSignOut = () => {
     sessionStorage.removeItem('mockUser');
@@ -113,9 +219,14 @@ export default function LeaderboardPage() {
             <p className="text-sm text-gray-500 dark:text-gray-400">IFA SkillQuest</p>
           </div>
         </div>
-        <Button variant="outline" className="mt-4 sm:mt-0 bg-white" onClick={handleSignOut}>
-          <LogOut className="mr-2 h-4 w-4" /> Logout
-        </Button>
+        <div className='flex gap-4'>
+            <Button variant="outline" className="mt-4 sm:mt-0 bg-white" onClick={() => router.push('/dashboard')}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Overview
+            </Button>
+            <Button variant="outline" className="mt-4 sm:mt-0 bg-white" onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" /> Logout
+            </Button>
+        </div>
       </header>
 
       <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
@@ -123,7 +234,7 @@ export default function LeaderboardPage() {
           <Button
             key={tab.name}
             variant={activeTab === tab.name ? 'default' : 'ghost'}
-            onClick={() => tab.action ? tab.action() : setActiveTab(tab.name)}
+            onClick={() => setActiveTab(tab.name)}
             className={cn(
               "shrink-0 rounded-full",
               activeTab === tab.name ? 'bg-primary text-primary-foreground' : 'bg-white text-gray-600'
@@ -136,86 +247,24 @@ export default function LeaderboardPage() {
       </div>
 
       <main>
-        <Card className="rounded-2xl shadow-lg">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                 <Trophy className="h-8 w-8 text-yellow-500"/>
-                 <div>
-                    <CardTitle className="text-xl">Assessment Leaderboard</CardTitle>
-                    <CardDescription>Top performers ranked by total score</CardDescription>
-                 </div>
-              </div>
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" /> Export
-              </Button>
-            </div>
-            <div className="relative mt-4">
+        <div className="relative">
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input 
-                placeholder="Search leaderboard..." 
-                className="pl-10"
+                placeholder={`Search ${activeTab.toLowerCase()}...`} 
+                className="pl-10 mb-6"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-4 mt-4">
-              <span className="text-sm font-medium text-muted-foreground">Sort by:</span>
-              <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                {sortOptions.map(opt => (
-                  <Button key={opt.name} variant="outline" size="sm" className="bg-white rounded-full">
-                    <opt.icon className="mr-2 h-4 w-4" />
-                    {opt.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Rank</TableHead>
-                    <TableHead>Candidate ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>College</TableHead>
-                    <TableHead>Total Score</TableHead>
-                    <TableHead><Puzzle className="h-5 w-5 mx-auto" /></TableHead>
-                    <TableHead><Box className="h-5 w-5 mx-auto" /></TableHead>
-                    <TableHead><Droplets className="h-5 w-5 mx-auto" /></TableHead>
-                    <TableHead>Completed</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {candidates.map((candidate) => (
-                    <TableRow key={candidate.id}>
-                      <TableCell className="font-bold text-lg text-primary">#{candidate.rank}</TableCell>
-                      <TableCell className="text-muted-foreground">{candidate.id}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={candidate.avatarUrl} />
-                            <AvatarFallback>{candidate.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{candidate.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{candidate.college}</TableCell>
-                      <TableCell className="font-bold text-lg text-green-600">{candidate.totalScore}</TableCell>
-                      <TableCell className="text-center text-blue-500 font-semibold">{candidate.unblockMe}</TableCell>
-                      <TableCell className="text-center text-orange-500 font-semibold">{candidate.minesweeper}</TableCell>
-                      <TableCell className="text-center text-teal-500 font-semibold">{candidate.waterCapacity}</TableCell>
-                      <TableCell className="text-muted-foreground">{candidate.completed}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+        </div>
+        {activeTab === 'Leaderboard' && <Leaderboard candidates={candidates} searchQuery={searchQuery} />}
+        {activeTab === 'Candidates' && <Candidates candidates={candidates} searchQuery={searchQuery} />}
+        {activeTab === 'Insights' && <Card className="rounded-2xl shadow-lg"><CardHeader><CardTitle>Insights</CardTitle></CardHeader><CardContent><p>Insights will be shown here.</p></CardContent></Card>}
       </main>
 
     </div>
   );
 }
+
+    
