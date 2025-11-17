@@ -10,6 +10,7 @@ import {
   FileText,
   Settings,
   BookOpen,
+  Bell,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -45,6 +46,7 @@ const useMockUser = () => {
 
 const employeeNavItems = [
   { href: '/dashboard/projects', icon: LayoutDashboard, label: 'My Projects' },
+  { href: '/dashboard/notifications', icon: Bell, label: 'Notifications' },
   { href: '/dashboard/training', icon: BookOpen, label: 'Training' },
   { href: '/dashboard/reports', icon: FileText, label: 'Reports' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
