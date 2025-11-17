@@ -1,10 +1,10 @@
 // src/firebase/admin.ts
-import *dmin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 
-if (!dmin.apps.length) {
+if (!admin.apps.length) {
   try {
-    dmin.initializeApp({
-      credential: dmin.credential.cert({
+    admin.initializeApp({
+      credential: admin.credential.cert({
         projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
@@ -16,5 +16,5 @@ if (!dmin.apps.length) {
   }
 }
 
-export const firestore = dmin.firestore();
-export const auth = dmin.auth();
+export const firestore = admin.firestore();
+export const auth = admin.auth();

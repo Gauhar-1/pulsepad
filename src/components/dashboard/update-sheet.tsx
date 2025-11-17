@@ -1,7 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
-import { useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { submitUpdate } from '@/lib/actions';
 import type { Project, Update } from '@/lib/definitions';
@@ -42,7 +41,7 @@ export function UpdateSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const initialState = { message: null, errors: {} };
-  const [state, dispatch] = useFormState(submitUpdate, initialState);
+  const [state, dispatch] = useActionState(submitUpdate, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
 
