@@ -1,3 +1,6 @@
+// This file is now deprecated as we are fetching data directly from Firebase in our components.
+// You can remove this file if you wish.
+
 import type { Project, Update, User } from '@/lib/definitions';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { isToday } from 'date-fns';

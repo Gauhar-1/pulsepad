@@ -1,5 +1,4 @@
 'use client';
-import type { User } from '@/lib/definitions';
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +13,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, FileText, Settings, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { getAuth, signOut } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -24,6 +25,18 @@ const menuItems = [
 
 export function AppSidebar({ user }: { user: User }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    const auth = getAuth();
+    try {
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error('Error signing out', error);
+    }
+  };
+
 
   return (
     <Sidebar>
@@ -51,18 +64,16 @@ export function AppSidebar({ user }: { user: User }) {
       <SidebarFooter className="p-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user.avatarUrl} alt={user.name} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+            <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
           <div className="overflow-hidden group-data-[collapsible=icon]:hidden">
-            <p className="truncate font-semibold">{user.name}</p>
+            <p className="truncate font-semibold">{user.displayName}</p>
             <p className="truncate text-xs text-muted-foreground">{user.email}</p>
           </div>
-          <Link href="/login" className="ml-auto group-data-[collapsible=icon]:hidden">
-            <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={handleSignOut} className="ml-auto group-data-[collapsible=icon]:hidden">
               <LogOut className="h-5 w-5" />
-            </Button>
-          </Link>
+          </Button>
         </div>
       </SidebarFooter>
     </Sidebar>

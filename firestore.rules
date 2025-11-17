@@ -1,0 +1,83 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return getRole() == 'admin';
+    }
+
+    function isEmployee() {
+      return getRole() == 'employee';
+    }
+    
+    function isClient() {
+        return getRole() == 'client';
+    }
+
+    // USERS collection
+    match /users/{userId} {
+      // Admins can read/write any user profile
+      // Users can only read/write their own profile
+      allow read, write: if isSignedIn() && (isAdmin() || isOwner(userId));
+    }
+
+    // PROJECTS collection
+    match /projects/{projectId} {
+      // Admins can do anything
+      // Employees can read projects they are assigned to
+      // Clients can read projects associated with them
+      allow read: if isSignedIn() && (isAdmin() || 
+        (isEmployee() && (resource.data.leadAssignee == request.auth.uid || request.auth.uid in resource.data.virtualAssistants || request.auth.uid in resource.data.freelancers)) ||
+        (isClient() && resource.data.clientId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.clientId)
+      );
+      allow create, update, delete: if isSignedIn() && isAdmin();
+    }
+    
+    // CLIENTS collection
+    match /clients/{clientId} {
+        // Admins can manage clients
+        // Clients can read their own details
+        allow read: if isSignedIn() && (isAdmin() || (isClient() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.clientId == clientId));
+        allow create, update, delete: if isSignedIn() && isAdmin();
+    }
+
+    // UPDATES collection
+    match /updates/{updateId} {
+        // Admins can read all updates
+        // Employees can create updates for their projects and read/edit their own updates.
+        // Clients can read updates for their projects.
+        function isProjectParticipant() {
+            let project = get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data;
+            return request.auth.uid == project.leadAssignee || request.auth.uid in project.virtualAssistants || request.auth.uid in project.freelancers;
+        }
+
+        function isUpdateOwner() {
+            return request.auth.uid == resource.data.userId;
+        }
+
+        allow read: if isSignedIn() && (isAdmin() || 
+            (isEmployee() && isProjectParticipant()) ||
+            (isClient() && get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.clientId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.clientId)
+        );
+
+        allow create: if isSignedIn() && isEmployee() && isProjectParticipant();
+        allow update: if isSignedIn() && isEmployee() && isUpdateOwner();
+        // Generally, updates are not deleted. Maybe archived.
+        allow delete: if isSignedIn() && isAdmin();
+    }
+  }
+}

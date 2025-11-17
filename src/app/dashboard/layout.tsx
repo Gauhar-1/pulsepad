@@ -1,16 +1,31 @@
+'use client';
 import { AppSidebar } from '@/components/dashboard/app-sidebar';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { getUser } from '@/lib/api';
 import { PanelLeft } from 'lucide-react';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getUser();
+  const { user, loading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    // You can show a loading spinner here
+    return <div>Loading...</div>;
+  }
 
   return (
     <SidebarProvider>
