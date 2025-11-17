@@ -42,6 +42,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { CreateProjectSheet } from '@/components/admin/create-project-sheet';
 
 const mockProjectData: ProjectSheetItem[] = [
   {
@@ -93,6 +94,7 @@ export default function AdminProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<ProjectSheetItem[]>(mockProjectData);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectSheetItem | null>(null);
 
   
@@ -117,6 +119,11 @@ export default function AdminProjectsPage() {
     }
   };
 
+  const handleAddProject = (newProject: Omit<ProjectSheetItem, 'id'>) => {
+    const projectWithId = { ...newProject, id: `proj-${Date.now()}` };
+    setProjects(prevProjects => [projectWithId, ...prevProjects]);
+  };
+
 
   return (
     <div className="admin-dashboard-gradient min-h-screen p-4 sm:p-8">
@@ -128,7 +135,7 @@ export default function AdminProjectsPage() {
             <p className="text-muted-foreground">Create and maintain project data.</p>
           </div>
         </div>
-        <Button>
+        <Button onClick={() => setIsCreateSheetOpen(true)}>
           <PlusCircle className="mr-2 h-4 w-4" /> Create Project
         </Button>
       </header>
@@ -237,6 +244,12 @@ export default function AdminProjectsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <CreateProjectSheet 
+        open={isCreateSheetOpen}
+        onOpenChange={setIsCreateSheetOpen}
+        onAddProject={handleAddProject}
+      />
     </div>
   );
 }
