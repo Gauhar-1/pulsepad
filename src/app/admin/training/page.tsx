@@ -11,15 +11,17 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BookOpen, Eye } from 'lucide-react';
+import { BookOpen, Eye, User } from 'lucide-react';
 import { mockEmployeeData, mockTrainingTasks } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Employee } from '@/lib/definitions';
 
 export default function AdminTrainingPage() {
   const trainingAssignments = useMemo(() => {
     const assignments: any[] = [];
     mockTrainingTasks.forEach(task => {
+      const trainer = mockEmployeeData.find(e => e.id === task.trainerId);
       task.assignedTo.forEach(employeeId => {
         const employee = mockEmployeeData.find(e => e.id === employeeId);
         if (employee) {
@@ -27,13 +29,15 @@ export default function AdminTrainingPage() {
             employee: {
               id: employee.id,
               name: employee.name,
-              avatarUrl: `https://i.pravatar.cc/150?u=${employee.id}`
+              avatarUrl: `https://i.pravatar.cc/150?u=${employee.id}`,
+              type: employee.type,
             },
             task: {
               title: task.title,
               category: task.category,
               status: task.status
-            }
+            },
+            trainer: trainer
           });
         }
       });
@@ -70,12 +74,18 @@ export default function AdminTrainingPage() {
                     </Avatar>
                     <div>
                       <h3 className="font-semibold">{assignment.employee.name}</h3>
-                      <p className="text-sm text-muted-foreground">Is training in</p>
+                      <p className="text-sm text-muted-foreground">{assignment.employee.type}</p>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex-grow">
+                  <CardContent className="flex-grow space-y-2">
                       <p className="font-medium">{assignment.task.title}</p>
                       <Badge variant="secondary" className="mt-1">{assignment.task.category}</Badge>
+                      {assignment.trainer && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
+                            <User className="h-4 w-4" />
+                            <span>Trainer: {assignment.trainer.name}</span>
+                        </div>
+                      )}
                   </CardContent>
                    <CardFooter>
                     <Button asChild variant="outline" className="w-full">

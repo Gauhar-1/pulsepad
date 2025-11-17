@@ -167,7 +167,8 @@ export const mockTrainingTasks: TrainingTask[] = [
         { id: 'log-1-1', notes: 'Finished the module on custom hooks. Built a useLocalStorage hook.', date: formatISO(subDays(now, 7), { representation: 'date' }) },
         { id: 'log-1-2', notes: 'Completed the final assessment with a 95% score.', date: formatISO(subDays(now, 2), { representation: 'date' }) }
     ],
-    assignedTo: ['emp-002']
+    assignedTo: ['emp-002'],
+    trainerId: 'emp-001'
   },
   { 
     id: 2, 
@@ -179,7 +180,8 @@ export const mockTrainingTasks: TrainingTask[] = [
     progressLogs: [
         { id: 'log-2-1', notes: 'Completed the section on Server Actions. It\'s a powerful feature for forms.', date: formatISO(subDays(now, 1), { representation: 'date' }) },
     ],
-    assignedTo: ['emp-001', 'emp-006']
+    assignedTo: ['emp-001', 'emp-006'],
+    trainerId: 'emp-008'
   },
   { 
     id: 3, 
@@ -189,7 +191,8 @@ export const mockTrainingTasks: TrainingTask[] = [
     category: 'Styling', 
     progress: 0,
     progressLogs: [],
-    assignedTo: ['emp-005']
+    assignedTo: ['emp-005'],
+    trainerId: 'emp-001'
   },
   { 
     id: 4, 
@@ -199,7 +202,8 @@ export const mockTrainingTasks: TrainingTask[] = [
     category: 'Language', 
     progress: 0,
     progressLogs: [],
-    assignedTo: ['emp-010', 'emp-012']
+    assignedTo: ['emp-010', 'emp-012'],
+    trainerId: 'emp-002'
   },
   { 
     id: 5, 
@@ -211,7 +215,8 @@ export const mockTrainingTasks: TrainingTask[] = [
     progressLogs: [
       { id: 'log-5-1', notes: 'This was a great refresher. Solidified my understanding of the topic.', date: formatISO(subDays(now, 10), { representation: 'date' }) }
     ],
-    assignedTo: ['emp-014']
+    assignedTo: ['emp-014'],
+    trainerId: 'emp-008'
   },
 ];
     
