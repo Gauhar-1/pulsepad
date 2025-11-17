@@ -32,6 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { CreateEmployeeSheet } from '@/components/admin/create-employee-sheet';
 
 const mockEmployeeData: Employee[] = [
     { id: 'emp-001', name: 'Alex Doe', skills: ['React', 'Node.js', 'TypeScript'], projects: ['QuantumLeap CRM', 'Odyssey Mobile App'], email: 'alex.doe@example.com', sheetId: 'sheet-001', active: true, type: 'Full-time' },
@@ -55,6 +56,8 @@ const mockEmployeeData: Employee[] = [
 export default function AdminEmployeesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [employees, setEmployees] = useState<Employee[]>(mockEmployeeData);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(e => 
@@ -63,6 +66,25 @@ export default function AdminEmployeesPage() {
       e.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   }, [employees, searchQuery]);
+  
+  const handleCreateClick = () => {
+    setSelectedEmployee(null);
+    setIsSheetOpen(true);
+  };
+  
+  const handleSaveEmployee = (employeeData: Omit<Employee, 'id' | 'projects' | 'sheetId'>, id?: string) => {
+    if (id) {
+        // For now, we only handle adding new employees
+    } else {
+        const newEmployee: Employee = {
+            ...employeeData,
+            id: `emp-${Date.now()}`,
+            projects: [],
+            sheetId: `sheet-${Date.now()}`
+        };
+        setEmployees(prev => [newEmployee, ...prev]);
+    }
+  };
 
 
   return (
@@ -75,7 +97,7 @@ export default function AdminEmployeesPage() {
             <p className="text-muted-foreground">View and maintain employee data.</p>
           </div>
         </div>
-        <Button>
+        <Button onClick={handleCreateClick}>
           <PlusCircle className="mr-2 h-4 w-4" /> Add Employee
         </Button>
       </header>
@@ -161,6 +183,12 @@ export default function AdminEmployeesPage() {
             </CardContent>
         </Card>
       </main>
+       <CreateEmployeeSheet 
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        onSaveEmployee={handleSaveEmployee}
+        employee={selectedEmployee}
+      />
     </div>
   );
 }
