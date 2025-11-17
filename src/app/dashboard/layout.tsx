@@ -43,12 +43,18 @@ const useMockUser = () => {
   return { user, loading };
 };
 
-const navItems = [
+const employeeNavItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Projects' },
   { href: '/dashboard/training', icon: BookOpen, label: 'Training' },
   { href: '/dashboard/reports', icon: FileText, label: 'Reports' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
+
+const clientNavItems = [
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
+    { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+];
+
 
 export default function DashboardLayout({
   children,
@@ -62,8 +68,13 @@ export default function DashboardLayout({
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
+    } else if (!loading && user?.role === 'client') {
+        // For clients, the main dashboard is the reports page.
+        if (pathname === '/dashboard') {
+            router.replace('/dashboard/reports');
+        }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname]);
 
   const handleSignOut = () => {
     sessionStorage.removeItem('mockUser');
@@ -78,10 +89,11 @@ export default function DashboardLayout({
     );
   }
 
-  if (!user || user.role === 'admin') {
-    // Don't render layout for admin, as it has its own layout/pages
+  if (!user || user.role === 'admin' || user.role === 'applicant') {
     return <>{children}</>;
   }
+
+  const navItems = user.role === 'employee' ? employeeNavItems : clientNavItems;
 
   return (
     <SidebarProvider>

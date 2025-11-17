@@ -184,6 +184,7 @@ export default function ReportsPage() {
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem('mockUser');
@@ -222,7 +223,11 @@ export default function ReportsPage() {
     }
     switch (user.role) {
       case 'employee':
-        return <EmployeeReport />;
+        if (pathname === '/dashboard/reports') {
+            return <EmployeeReport />;
+        }
+        // Employee dashboard is on a different page
+        return null; 
       case 'client':
         return <ClientReport />;
       default:
@@ -237,6 +242,19 @@ export default function ReportsPage() {
         );
     }
   };
+  
+  const getPageTitle = () => {
+    if (!user) return 'Reports';
+    switch (user.role) {
+        case 'client':
+            return 'Project Overview';
+        case 'employee':
+            return 'My Reports';
+        default:
+            return 'Reports'
+    }
+  }
+
 
   if (user?.role === 'admin') {
       // Admin is redirected, so we can just show a loading or empty state here
@@ -247,11 +265,17 @@ export default function ReportsPage() {
       )
   }
 
+  // For clients, this page acts as their main dashboard.
+  // For employees, it's just one of the tabs.
+  if (user?.role === 'employee' && pathname !== '/dashboard/reports') {
+      return null;
+  }
+  
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
       <div className="flex items-center">
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          Reports
+          {getPageTitle()}
         </h1>
       </div>
       {renderReport()}
