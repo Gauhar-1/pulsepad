@@ -73,3 +73,12 @@ export type Employee = {
     active: boolean;
     type: 'Lead' | 'Core' | 'VA' | 'Coder' | 'Freelancer';
 };
+
+export type TrainingTask = {
+    id: number;
+    title: string;
+    description: string;
+    status: 'completed' | 'in-progress' | 'not-started';
+    category: string;
+    progress: number;
+}

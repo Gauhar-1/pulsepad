@@ -1,16 +1,11 @@
+
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BookOpen, CheckCircle, Clock } from 'lucide-react';
+import { BookOpen, CheckCircle, Clock, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-
-const mockTrainingTasks = [
-  { id: 1, title: 'Advanced React Hooks', status: 'completed', category: 'Frontend' },
-  { id: 2, title: 'Next.js 14 Deep Dive', status: 'in-progress', category: 'Framework' },
-  { id: 3, title: 'Introduction to Tailwind CSS', status: 'not-started', category: 'Styling' },
-  { id: 4, title: 'Mastering TypeScript', status: 'not-started', category: 'Language' },
-  { id: 5, title: 'Server Actions in Next.js', status: 'completed', category: 'Framework' },
-];
+import { mockTrainingTasks } from '@/lib/mock-data';
+import Link from 'next/link';
 
 export default function TrainingPage() {
   return (
@@ -21,21 +16,29 @@ export default function TrainingPage() {
       <div className="grid gap-6">
         {mockTrainingTasks.map((task) => (
           <Card key={task.id}>
-            <CardHeader className="grid grid-cols-[1fr_110px] items-start gap-4 space-y-0">
+            <CardHeader className="grid grid-cols-[1fr_auto] items-start gap-4 space-y-0">
               <div className="space-y-1">
                 <CardTitle>{task.title}</CardTitle>
                 <CardDescription>
                   <Badge variant="secondary">{task.category}</Badge>
                 </CardDescription>
               </div>
-              <div className="flex items-center space-x-1 rounded-md bg-secondary text-secondary-foreground">
-                <Button variant="secondary" className="w-full justify-start">
+              <div className="flex items-center space-x-2">
+                 <div className="flex items-center space-x-1 rounded-md bg-secondary text-secondary-foreground p-1 pl-2 pr-2">
                     {task.status === 'completed' && <CheckCircle className="mr-2 h-4 w-4 text-green-500" />}
                     {task.status === 'in-progress' && <Clock className="mr-2 h-4 w-4 text-blue-500 animate-spin" />}
                     {task.status === 'not-started' && <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />}
-                    {task.status === 'completed' && 'Completed'}
-                    {task.status === 'in-progress' && 'In Progress'}
-                    {task.status === 'not-started' && 'Start Now'}
+                    <span className="text-sm font-medium">
+                        {task.status === 'completed' && 'Completed'}
+                        {task.status === 'in-progress' && 'In Progress'}
+                        {task.status === 'not-started' && 'Not Started'}
+                    </span>
+                </div>
+                 <Button asChild variant="outline" size="icon">
+                    <Link href={`/dashboard/training/${task.id}`}>
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">View Details</span>
+                    </Link>
                 </Button>
               </div>
             </CardHeader>

@@ -1,5 +1,5 @@
 
-import type { Employee, ProjectSheetItem } from '@/lib/definitions';
+import type { Employee, ProjectSheetItem, TrainingTask } from '@/lib/definitions';
 import { addDays, addMonths, formatISO } from 'date-fns';
 
 const now = new Date();
@@ -154,4 +154,12 @@ export const mockProjectData: ProjectSheetItem[] = [
   },
 ];
 
+
+export const mockTrainingTasks: TrainingTask[] = [
+  { id: 1, title: 'Advanced React Hooks', description: 'A deep dive into advanced React hooks like useReducer, useCallback, and custom hooks to optimize performance and state management.', status: 'completed', category: 'Frontend', progress: 100 },
+  { id: 2, title: 'Next.js 14 Deep Dive', description: 'Explore the latest features in Next.js 14, including Server Actions, partial pre-rendering, and advanced routing techniques.', status: 'in-progress', category: 'Framework', progress: 45 },
+  { id: 3, title: 'Introduction to Tailwind CSS', description: 'Learn the fundamentals of utility-first CSS with Tailwind, covering setup, configuration, and responsive design.', status: 'not-started', category: 'Styling', progress: 0 },
+  { id: 4, title: 'Mastering TypeScript', description: 'From basic types to advanced concepts like generics, decorators, and mapped types, this course covers everything you need to be proficient in TypeScript.', status: 'not-started', category: 'Language', progress: 0 },
+  { id: 5, title: 'Server Actions in Next.js', description: 'Understand how to use Server Actions for data mutations and form submissions without creating separate API endpoints.', status: 'completed', category: 'Framework', progress: 100 },
+];
     
