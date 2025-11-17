@@ -4,7 +4,7 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { mockProjectData, mockEmployeeData } from '@/lib/mock-data';
-import type { ProjectSheetItem, Employee } from '@/lib/definitions';
+import type { ProjectSheetItem, Employee, Update } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -25,10 +25,13 @@ import {
   MessageSquare,
   Star,
   UserCircle,
+  CheckCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getAllUpdates } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 const DetailItem = ({
   icon: Icon,
@@ -55,10 +58,17 @@ const DetailItem = ({
   );
 };
 
+interface UpdateWithAuthor extends Update {
+    authorName: string;
+    authorAvatar: string;
+}
+
+
 export default function ProjectDetailPage() {
   const { id } = useParams();
   const [project, setProject] = useState<ProjectSheetItem | null>(null);
   const [team, setTeam] = useState<Employee[]>([]);
+  const [updates, setUpdates] = useState<UpdateWithAuthor[]>([]);
 
   useEffect(() => {
     const foundProject = mockProjectData.find((p) => p.id === id);
@@ -80,6 +90,25 @@ export default function ProjectDetailPage() {
       );
       setTeam(teamMembers);
     }
+     async function fetchUpdates() {
+        const allUpdates = await getAllUpdates();
+        const projectUpdates = allUpdates
+            .filter(u => u.projectId === id)
+            .map(u => {
+                const author = mockEmployeeData.find(e => `user-${e.id.split('-')[1]}` === u.userId);
+                return {
+                    ...u,
+                    authorName: author?.name || 'Unknown User',
+                    authorAvatar: `https://i.pravatar.cc/150?u=${author?.id}`
+                }
+            })
+            .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setUpdates(projectUpdates);
+      }
+      if (id) {
+          fetchUpdates();
+      }
+
   }, [id]);
 
   if (!project) {
@@ -89,16 +118,8 @@ export default function ProjectDetailPage() {
     return notFound();
   }
 
-  const updatesAndMilestones = [
-    ...(project.milestones || []).map(m => ({
-      type: 'milestone',
-      date: m.date,
-      content: m.name,
-      icon: Star,
-    })),
-    { type: 'update', date: '2024-07-14', content: 'Finalized the mockups for the dashboard.', author: 'Alex Doe', icon: MessageSquare },
-    { type: 'update', date: '2024-07-13', content: 'Initial wireframes shared with the client.', author: 'Alex Doe', icon: MessageSquare },
-  ].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedMilestones = (project.milestones || []).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
 
   return (
     <div className="p-4 sm:p-8">
@@ -150,29 +171,68 @@ export default function ProjectDetailPage() {
             </Card>
 
             <Card className="mt-8">
-                 <CardHeader>
+                <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Milestone /> Timeline
+                      <MessageSquare /> Recent Updates
                     </CardTitle>
-                    <CardDescription>A log of project milestones and daily updates.</CardDescription>
+                    <CardDescription>A log of daily updates from the team.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="relative pl-6">
-                        <div className="absolute left-6 top-0 h-full w-0.5 bg-border"></div>
-                        {updatesAndMilestones.map((item, index) => (
-                           <div key={index} className="mb-8 flex items-start gap-4">
-                                <div className="z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background border-2 border-primary">
-                                    <item.icon className="h-4 w-4 text-primary"/>
-                                </div>
-                                <div className="flex-1 -mt-1">
+                   <div className="relative pl-6">
+                        <div className="absolute left-[22px] top-0 h-full w-0.5 bg-border -translate-x-1/2"></div>
+                        {updates.length > 0 ? updates.map((item) => (
+                           <div key={item.id} className="mb-8 flex items-start gap-4">
+                               <Avatar className="z-10 h-10 w-10 border-2 border-primary">
+                                    <AvatarImage src={item.authorAvatar} />
+                                    <AvatarFallback>{item.authorName.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 -mt-1 pt-1">
                                     <p className="font-medium">{item.content}</p>
                                     <p className="text-sm text-muted-foreground">
-                                        {new Date(item.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                                        {item.type === 'update' && item.author && ` - by ${item.author}`}
+                                        {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                                        {' - by '} 
+                                        <span className="font-semibold">{item.authorName}</span>
                                     </p>
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                          <p className="text-sm text-muted-foreground">No updates have been submitted for this project yet.</p>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="mt-8">
+                 <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Milestone /> Milestone Progress
+                    </CardTitle>
+                    <CardDescription>A timeline of project milestones.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="relative pl-6">
+                        <div className="absolute left-[22px] top-0 h-full w-0.5 bg-border -translate-x-1/2"></div>
+                        {sortedMilestones.length > 0 ? sortedMilestones.map((item) => (
+                           <div key={item.id} className="mb-8 flex items-start gap-4">
+                                <div className={cn("z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background border-2", {
+                                    "border-green-500": item.status === 'completed',
+                                    "border-primary": item.status === 'upcoming',
+                                    "border-destructive": item.status === 'missed'
+                                })}>
+                                    {item.status === 'completed' && <CheckCircle className="h-5 w-5 text-green-500"/>}
+                                    {item.status === 'upcoming' && <Milestone className="h-5 w-5 text-primary"/>}
+                                    {item.status === 'missed' && <Milestone className="h-5 w-5 text-destructive"/>}
+                                </div>
+                                <div className="flex-1 pt-1.5">
+                                    <p className="font-medium">{item.name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {new Date(item.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                    </p>
+                                </div>
+                            </div>
+                        )) : (
+                          <p className="text-sm text-muted-foreground">No milestones have been set for this project yet.</p>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -230,5 +290,7 @@ const LinkItem = ({ href, icon: Icon, label }: { href: string, icon: React.Eleme
         </Link>
     </Button>
 )
+
+    
 
     
