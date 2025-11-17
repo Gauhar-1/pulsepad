@@ -30,9 +30,11 @@ import {
   Droplets,
   LogOut,
   MoreVertical,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import type { User as UserType } from '@/lib/definitions';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -58,6 +60,8 @@ type Candidate = {
   completed: string;
 };
 
+type SortKey = 'totalScore' | 'unblockMe' | 'minesweeper' | 'waterCapacity' | 'rank';
+
 const mockCandidates: Candidate[] = [
   { rank: 1, id: 'IFA941710UY92', name: 'Lankalapalli Kumar', avatarUrl: 'https://i.pravatar.cc/150?u=a', college: 'Gayatri vidya parishad', totalScore: 18, unblockMe: 4, minesweeper: 1, waterCapacity: 7, completed: '16/11/2025' },
   { rank: 2, id: 'IFA6103685JYK', name: 'Anmol Pathak', avatarUrl: 'https://i.pravatar.cc/150?u=b', college: 'abc', totalScore: 18, unblockMe: 6, minesweeper: 2, waterCapacity: 2, completed: '16/11/2025' },
@@ -75,7 +79,17 @@ const mockCandidates: Candidate[] = [
   { rank: 14, id: 'IFA4999843YL6', name: 'Divya Darsini', avatarUrl: '', college: 'SRM Univeristy of Science and Technology', totalScore: 6, unblockMe: 2, minesweeper: 0, waterCapacity: 2, completed: '16/11/2025' },
 ];
 
-const Leaderboard = ({ candidates, searchQuery }: { candidates: Candidate[], searchQuery: string }) => (
+const Leaderboard = ({
+    candidates,
+    searchQuery,
+    sortDescriptor,
+    onSortChange,
+  }: {
+    candidates: Candidate[];
+    searchQuery: string;
+    sortDescriptor: { key: SortKey; direction: 'asc' | 'desc' };
+    onSortChange: (key: SortKey) => void;
+  }) => (
   <Card className="rounded-2xl shadow-lg">
     <CardHeader>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -94,9 +108,20 @@ const Leaderboard = ({ candidates, searchQuery }: { candidates: Candidate[], sea
         <span className="text-sm font-medium text-muted-foreground">Sort by:</span>
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
           {sortOptions.map(opt => (
-            <Button key={opt.name} variant="outline" size="sm" className="bg-white rounded-full">
+            <Button 
+                key={opt.name} 
+                variant="outline" 
+                size="sm" 
+                className={cn("bg-white rounded-full", sortDescriptor.key === opt.sortKey && 'bg-primary text-primary-foreground')}
+                onClick={() => onSortChange(opt.sortKey)}
+            >
               <opt.icon className="mr-2 h-4 w-4" />
               {opt.name}
+              {sortDescriptor.key === opt.sortKey && (
+                sortDescriptor.direction === 'desc' 
+                  ? <ArrowDown className="ml-2 h-4 w-4" /> 
+                  : <ArrowUp className="ml-2 h-4 w-4" />
+              )}
             </Button>
           ))}
         </div>
@@ -216,32 +241,54 @@ const tabs = [
     { name: 'Insights', icon: TrendingUp },
 ];
 
-const sortOptions = [
-    { name: 'Total Score', icon: Trophy },
-    { name: 'Unblock Me', icon: Puzzle },
-    { name: 'Minesweeper', icon: Box },
-    { name: 'Water Capacity', icon: Droplets },
+const sortOptions: { name: string; icon: React.ElementType; sortKey: SortKey }[] = [
+    { name: 'Total Score', icon: Trophy, sortKey: 'totalScore' },
+    { name: 'Unblock Me', icon: Puzzle, sortKey: 'unblockMe' },
+    { name: 'Minesweeper', icon: Box, sortKey: 'minesweeper' },
+    { name: 'Water Capacity', icon: Droplets, sortKey: 'waterCapacity' },
 ];
 
 export default function LeaderboardPage() {
   const [activeTab, setActiveTab] = useState('Leaderboard');
   const [searchQuery, setSearchQuery] = useState('');
-  const [candidates, setCandidates] = useState<Candidate[]>(mockCandidates);
+  const [sortDescriptor, setSortDescriptor] = useState<{key: SortKey, direction: 'asc' | 'desc'}>({ key: 'totalScore', direction: 'desc' });
   const router = useRouter();
 
-  useEffect(() => {
-    const filtered = mockCandidates.filter(c => 
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.college.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.id.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setCandidates(filtered);
-  }, [searchQuery]);
-  
   const handleSignOut = () => {
     sessionStorage.removeItem('mockUser');
     router.push('/login');
   };
+
+  const handleSortChange = (key: SortKey) => {
+    if (sortDescriptor.key === key) {
+        setSortDescriptor({ ...sortDescriptor, direction: sortDescriptor.direction === 'asc' ? 'desc' : 'asc' });
+    } else {
+        setSortDescriptor({ key, direction: 'desc' });
+    }
+  };
+  
+  const filteredCandidates = useMemo(() => {
+    return mockCandidates.filter(c => 
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.college.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.id.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+  }, [searchQuery]);
+
+  const sortedCandidates = useMemo(() => {
+    const sorted = [...filteredCandidates].sort((a, b) => {
+        if (a[sortDescriptor.key] < b[sortDescriptor.key]) {
+            return sortDescriptor.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortDescriptor.key] > b[sortDescriptor.key]) {
+            return sortDescriptor.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+    });
+  
+    // Re-assign ranks after sorting
+    return sorted.map((c, index) => ({ ...c, rank: index + 1 }));
+  }, [filteredCandidates, sortDescriptor]);
   
   return (
     <div className="admin-dashboard-gradient min-h-screen p-4 sm:p-8">
@@ -292,8 +339,15 @@ export default function LeaderboardPage() {
               />
             </div>
         </div>
-        {activeTab === 'Leaderboard' && <Leaderboard candidates={candidates} searchQuery={searchQuery} />}
-        {activeTab === 'Candidates' && <Candidates candidates={candidates} searchQuery={searchQuery} />}
+        {activeTab === 'Leaderboard' && (
+          <Leaderboard 
+            candidates={sortedCandidates} 
+            searchQuery={searchQuery}
+            sortDescriptor={sortDescriptor}
+            onSortChange={handleSortChange} 
+          />
+        )}
+        {activeTab === 'Candidates' && <Candidates candidates={sortedCandidates} searchQuery={searchQuery} />}
         {activeTab === 'Insights' && <Card className="rounded-2xl shadow-lg"><CardHeader><CardTitle>Insights</CardTitle></CardHeader><CardContent><p>Insights will be shown here.</p></CardContent></Card>}
       </main>
 
