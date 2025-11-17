@@ -1,9 +1,13 @@
 import type { Project, Update, User } from '@/lib/definitions';
-import { isToday } from 'date-fns';
+import { isToday, subDays } from 'date-fns';
 
 const users: User[] = [
-  { id: 'user-employee', name: 'Alex Doe', email: 'alex.doe@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=employee', role: 'employee' },
-  { id: 'user-admin', name: 'Sam Admin', email: 'sam.admin@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=admin', role: 'admin' },
+  { id: 'user-employee-1', name: 'Alex Doe', email: 'alex.doe@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=employee1', role: 'employee' },
+  { id: 'user-employee-2', name: 'Maria Garcia', email: 'maria.garcia@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=employee2', role: 'employee' },
+  { id: 'user-employee-3', name: 'Sam Wilson', email: 'sam.wilson@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=employee3', role: 'employee' },
+  { id: 'user-admin', name: 'Jane Smith', email: 'jane.smith@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=admin', role: 'admin' },
+  { id: 'user-client', name: 'Peter Jones', email: 'peter.jones@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=client', role: 'client' },
+  { id: 'user-applicant', name: 'Mary Brown', email: 'mary.brown@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=applicant', role: 'applicant' },
 ];
 
 const projects: Project[] = [
@@ -15,21 +19,15 @@ const projects: Project[] = [
 ];
 
 let updates: Update[] = [
-  {
-    id: 'update-1',
-    projectId: 'proj-1',
-    userId: 'user-employee',
-    content: 'Finished the main dashboard component and integrated the new charting library.',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'update-2',
-    projectId: 'proj-3',
-    userId: 'user-employee',
-    content: 'Project is on hold pending client feedback on the new designs.',
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
+  { id: 'update-1', projectId: 'proj-1', userId: 'user-employee-1', content: 'Finished the main dashboard component and integrated the new charting library.', createdAt: new Date().toISOString() },
+  { id: 'update-2', projectId: 'proj-2', userId: 'user-employee-2', content: 'Fixed the bug in the payment gateway integration.', createdAt: new Date().toISOString() },
+  { id: 'update-3', projectId: 'proj-4', userId: 'user-employee-1', content: 'Deployed the new build to staging for client review.', createdAt: new Date().toISOString() },
+  { id: 'update-4', projectId: 'proj-1', userId: 'user-employee-3', content: 'Initial setup for the new database schema.', createdAt: subDays(new Date(), 1).toISOString() },
+  { id: 'update-5', projectId: 'proj-2', userId: 'user-employee-2', content: 'Updated the UI components based on feedback.', createdAt: subDays(new Date(), 1).toISOString() },
+  { id: 'update-6', projectId: 'proj-4', userId: 'user-employee-1', content: 'User authentication flow is now complete.', createdAt: subDays(new Date(), 2).toISOString() },
+  { id: 'update-7', projectId: 'proj-2', userId: 'user-employee-2', content: 'Met with the client to discuss the project timeline.', createdAt: subDays(new Date(), 3).toISOString() },
 ];
+
 
 // Simulate API latency
 const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
@@ -39,13 +37,34 @@ export async function getUser(userId: string): Promise<User | undefined> {
   return users.find(u => u.id === userId);
 }
 
+export async function getUsers(role?: User['role']): Promise<User[]> {
+  await delay(50);
+  if (role) {
+    return users.filter(u => u.role === role);
+  }
+  return users;
+}
+
+export async function getAllProjects(): Promise<Project[]> {
+  await delay(100);
+  return projects;
+}
+
 export async function getActiveProjects(): Promise<Project[]> {
   await delay(100);
+  // In a real app, this would be `p.assignedTo.includes(userId)`
   return projects.filter((p) => p.status === 'active');
 }
 
+export async function getAllUpdates(): Promise<Update[]> {
+  await delay(100);
+  return updates;
+}
+
+
 export async function getTodaysUpdates(): Promise<Update[]> {
   await delay(100);
+  // In a real app, this would be filtered by userId
   return updates.filter((u) => isToday(new Date(u.createdAt)));
 }
 
@@ -53,7 +72,7 @@ export async function saveUpdate(projectId: string, content: string, updateId?: 
   await delay(500);
   
   // In a real app, you'd get the user from the session
-  const userId = 'user-employee'; 
+  const userId = 'user-employee-1'; 
 
   if (updateId) {
     // Edit existing update
