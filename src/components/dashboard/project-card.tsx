@@ -1,13 +1,15 @@
+
 'use client';
 import { useState } from 'react';
 import type { Project, Update } from '@/lib/definitions';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building, Plus, CheckCircle2, Edit } from 'lucide-react';
+import { Building, Plus, CheckCircle2, Edit, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { UpdateSheet } from './update-sheet';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 type ProjectWithUpdate = Project & { todaysUpdate?: Update };
 
@@ -19,11 +21,21 @@ export function ProjectCard({ project }: { project: ProjectWithUpdate }) {
     <>
       <Card className="flex h-full flex-col transition-all hover:shadow-lg">
         <CardHeader>
-          <CardTitle className="text-lg font-bold tracking-tight">{project.name}</CardTitle>
-          <CardDescription className="flex items-center gap-2 pt-1">
-            <Building className="h-4 w-4" />
-            {project.client}
-          </CardDescription>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-lg font-bold tracking-tight">{project.name}</CardTitle>
+              <CardDescription className="flex items-center gap-2 pt-1">
+                <Building className="h-4 w-4" />
+                {project.client}
+              </CardDescription>
+            </div>
+             <Button variant="ghost" size="icon" asChild>
+                <Link href={`/admin/projects/${project.id}`}>
+                    <Eye className="h-5 w-5 text-muted-foreground" />
+                    <span className="sr-only">View Details</span>
+                </Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="flex-grow">
           <Badge
