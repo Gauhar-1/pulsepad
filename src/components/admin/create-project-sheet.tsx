@@ -67,6 +67,7 @@ interface CreateProjectSheetProps {
   onSaveProject: (project: Omit<ProjectSheetItem, 'id'>, id?: string) => void;
   project: ProjectSheetItem | null;
   leads: Employee[];
+  virtualAssistants: Employee[];
 }
 
 export function CreateProjectSheet({
@@ -75,6 +76,7 @@ export function CreateProjectSheet({
   onSaveProject,
   project,
   leads,
+  virtualAssistants,
 }: CreateProjectSheetProps) {
   const isEditMode = !!project;
   
@@ -255,8 +257,23 @@ export function CreateProjectSheet({
                                     <FormMessage />
                                 </FormItem>
                             )}/>
-                             <FormField name="virtualAssistant" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Virtual Assistant</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                              <FormField name="virtualAssistant" control={form.control} render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Virtual Assistant</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value} >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a VA" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {virtualAssistants.map(va => (
+                                                <SelectItem key={va.id} value={va.name}>{va.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
                             )}/>
                              <FormField name="freelancers" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Freelancers (comma-separated)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>

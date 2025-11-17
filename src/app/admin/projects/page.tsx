@@ -69,6 +69,10 @@ export default function AdminProjectsPage() {
     return employees.filter(e => e.active && e.type === 'Lead');
   }, [employees]);
 
+  const activeVAs = useMemo(() => {
+    return employees.filter(e => e.active && e.type === 'VA');
+  }, [employees]);
+
   const handleCreateClick = () => {
     setSelectedProject(null);
     setIsSheetOpen(true);
@@ -235,6 +239,7 @@ export default function AdminProjectsPage() {
         onSaveProject={handleSaveProject as any}
         project={selectedProject}
         leads={activeLeads}
+        virtualAssistants={activeVAs}
       />
 
       <ViewProjectDialog
