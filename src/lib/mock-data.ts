@@ -1,0 +1,66 @@
+
+import type { Employee, ProjectSheetItem } from '@/lib/definitions';
+
+export const mockEmployeeData: Employee[] = [
+    { id: 'emp-001', name: 'Alex Doe', skills: ['React', 'Node.js', 'TypeScript'], projects: ['QuantumLeap CRM', 'Odyssey Mobile App'], email: 'alex.doe@example.com', sheetId: 'sheet-001', active: true, type: 'Lead' },
+    { id: 'emp-002', name: 'Maria Garcia', skills: ['Next.js', 'GraphQL', 'Prisma'], projects: ['Nova E-commerce Platform'], email: 'maria.garcia@example.com', sheetId: 'sheet-002', active: true, type: 'Core' },
+    { id: 'emp-003', name: 'Sam Wilson', skills: ['Data Viz', 'D3.js', 'Python'], projects: ['Project Phoenix'], email: 'sam.wilson@example.com', sheetId: 'sheet-003', active: false, type: 'Core' },
+    { id: 'emp-004', name: 'Li Wei', skills: ['Angular', 'Java', 'Spring Boot'], projects: [], email: 'li.wei@example.com', sheetId: 'sheet-004', active: true, type: 'VA' },
+    { id: 'emp-005', name: 'Fatima Ahmed', skills: ['Vue.js', 'Firebase', 'UX/UI'], projects: ['Titan Analytics Dashboard'], email: 'fatima.ahmed@example.com', sheetId: 'sheet-005', active: true, type: 'Core' },
+    { id: 'emp-006', name: 'Kenji Tanaka', skills: ['React Native', 'Swift', 'Kotlin'], projects: ['Odyssey Mobile App'], email: 'kenji.tanaka@example.com', sheetId: 'sheet-006', active: true, type: 'Coder' },
+    { id: 'emp-007', name: 'Isabella Rossi', skills: ['PHP', 'Laravel', 'MySQL'], projects: [], email: 'isabella.rossi@example.com', sheetId: 'sheet-007', active: false, type: 'Core' },
+    { id: 'emp-008', name: 'David Chen', skills: ['Go', 'Docker', 'Kubernetes'], projects: ['QuantumLeap CRM'], email: 'david.chen@example.com', sheetId: 'sheet-008', active: true, type: 'Lead' },
+    { id: 'emp-009', name: 'Aisha Khan', skills: ['Flutter', 'Dart', 'Firebase'], projects: [], email: 'aisha.khan@example.com', sheetId: 'sheet-009', active: true, type: 'VA' },
+    { id: 'emp-010', name: 'Carlos Gomez', skills: ['C#', '.NET', 'Azure'], projects: ['Titan Analytics Dashboard'], email: 'carlos.gomez@example.com', sheetId: 'sheet-010', active: true, type: 'Coder' },
+    { id: 'emp-011', name: 'Olivia Martinez', skills: ['Svelte', 'Sapper', 'PostgreSQL'], projects: [], email: 'olivia.martinez@example.com', sheetId: 'sheet-011', active: false, type: 'Core' },
+    { id: 'emp-012', name: 'Ben Carter', skills: ['React', 'Redux', 'Jest'], projects: ['Nova E-commerce Platform'], email: 'ben.carter@example.com', sheetId: 'sheet-012', active: true, type: 'Freelancer' },
+    { id: 'emp-013', name: 'Chloe Dubois', skills: ['Ruby on Rails', 'Heroku'], projects: [], email: 'chloe.dubois@example.com', sheetId: 'sheet-013', active: true, type: 'Core' },
+    { id: 'emp-014', name: 'Arjun Reddy', skills: ['Python', 'Django', 'AWS'], projects: ['Project Phoenix'], email: 'arjun.reddy@example.com', sheetId: 'sheet-014', active: true, type: 'Lead' },
+    { id: 'emp-015', name: 'Sofia Petrov', skills: ['JavaScript', 'HTML', 'CSS'], projects: [], email: 'sofia.petrov@example.com', sheetId: 'sheet-015', active: false, type: 'Freelancer' },
+];
+
+
+export const mockProjectData: ProjectSheetItem[] = [
+  {
+    id: 'proj-001',
+    clientName: 'Stellar Solutions',
+    clientType: 'Enterprise',
+    projectTitle: 'QuantumLeap CRM',
+    projectType: 'Web App',
+    tags: ['CRM', 'SaaS'],
+    priority: 'High',
+    status: 'In Progress',
+    estimatedHours: 250,
+    startDate: '2024-06-01',
+    endDate: '2024-12-31',
+    leadAssignee: 'Alex Doe',
+  },
+  {
+    id: 'proj-002',
+    clientName: 'Orion Commerce',
+    clientType: 'Startup',
+    projectTitle: 'Nova E-commerce Platform',
+    projectType: 'E-commerce',
+    tags: ['React', 'Next.js'],
+    priority: 'High',
+    status: 'In Progress',
+    estimatedHours: 400,
+    startDate: '2024-05-15',
+    endDate: '2025-01-31',
+    leadAssignee: 'Maria Garcia',
+  },
+  {
+    id: 'proj-003',
+    clientName: 'Meridian Inc.',
+    clientType: 'Corporate',
+    projectTitle: 'Project Phoenix',
+    projectType: 'Internal Tool',
+    tags: ['data-viz', 'reporting'],
+    priority: 'Medium',
+    status: 'On Hold',
+    estimatedHours: 120,
+    startDate: '2024-07-01',
+    endDate: '2024-10-31',
+    leadAssignee: 'Sam Wilson',
+  },
+];

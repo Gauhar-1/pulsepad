@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ProjectSheetItem } from '@/lib/definitions';
+import { Employee, ProjectSheetItem } from '@/lib/definitions';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -66,6 +66,7 @@ interface CreateProjectSheetProps {
   onOpenChange: (open: boolean) => void;
   onSaveProject: (project: Omit<ProjectSheetItem, 'id'>, id?: string) => void;
   project: ProjectSheetItem | null;
+  leads: Employee[];
 }
 
 export function CreateProjectSheet({
@@ -73,6 +74,7 @@ export function CreateProjectSheet({
   onOpenChange,
   onSaveProject,
   project,
+  leads,
 }: CreateProjectSheetProps) {
   const isEditMode = !!project;
   
@@ -236,7 +238,22 @@ export function CreateProjectSheet({
                         <div className="space-y-2">
                              <h3 className="text-sm font-medium">Assignments</h3>
                              <FormField name="leadAssignee" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Lead Assignee</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormItem>
+                                    <FormLabel>Lead Assignee</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a lead" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {leads.map(lead => (
+                                                <SelectItem key={lead.id} value={lead.name}>{lead.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
                             )}/>
                              <FormField name="virtualAssistant" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Virtual Assistant</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>

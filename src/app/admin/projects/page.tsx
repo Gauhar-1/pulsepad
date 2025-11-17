@@ -24,7 +24,7 @@ import {
   Search,
   MoreVertical,
 } from 'lucide-react';
-import type { ProjectSheetItem } from '@/lib/definitions';
+import type { Employee, ProjectSheetItem } from '@/lib/definitions';
 import { useState, useMemo } from 'react';
 import {
   DropdownMenu,
@@ -44,56 +44,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { CreateProjectSheet } from '@/components/admin/create-project-sheet';
 import { ViewProjectDialog } from '@/components/admin/view-project-dialog';
-
-const mockProjectData: ProjectSheetItem[] = [
-  {
-    id: 'proj-001',
-    clientName: 'Stellar Solutions',
-    clientType: 'Enterprise',
-    projectTitle: 'QuantumLeap CRM',
-    projectType: 'Web App',
-    tags: ['CRM', 'SaaS'],
-    priority: 'High',
-    status: 'In Progress',
-    estimatedHours: 250,
-    startDate: '2024-06-01',
-    endDate: '2024-12-31',
-    leadAssignee: 'Alex Doe',
-  },
-  {
-    id: 'proj-002',
-    clientName: 'Orion Commerce',
-    clientType: 'Startup',
-    projectTitle: 'Nova E-commerce Platform',
-    projectType: 'E-commerce',
-    tags: ['React', 'Next.js'],
-    priority: 'High',
-    status: 'In Progress',
-    estimatedHours: 400,
-    startDate: '2024-05-15',
-    endDate: '2025-01-31',
-    leadAssignee: 'Maria Garcia',
-  },
-  {
-    id: 'proj-003',
-    clientName: 'Meridian Inc.',
-    clientType: 'Corporate',
-    projectTitle: 'Project Phoenix',
-    projectType: 'Internal Tool',
-    tags: ['data-viz', 'reporting'],
-    priority: 'Medium',
-    status: 'On Hold',
-    estimatedHours: 120,
-    startDate: '2024-07-01',
-    endDate: '2024-10-31',
-    leadAssignee: 'Sam Wilson',
-  },
-];
+import { mockProjectData, mockEmployeeData } from '@/lib/mock-data';
 
 
 export default function AdminProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<ProjectSheetItem[]>(mockProjectData);
+  const [employees, setEmployees] = useState<Employee[]>(mockEmployeeData);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -107,6 +64,10 @@ export default function AdminProjectsPage() {
       p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   }, [projects, searchQuery]);
+
+  const activeLeads = useMemo(() => {
+    return employees.filter(e => e.active && e.type === 'Lead');
+  }, [employees]);
 
   const handleCreateClick = () => {
     setSelectedProject(null);
@@ -273,6 +234,7 @@ export default function AdminProjectsPage() {
         onOpenChange={setIsSheetOpen}
         onSaveProject={handleSaveProject as any}
         project={selectedProject}
+        leads={activeLeads}
       />
 
       <ViewProjectDialog
