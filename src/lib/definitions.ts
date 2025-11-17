@@ -27,3 +27,26 @@ export type Client = {
   contactPerson: string;
   email: string;
 };
+
+export type ProjectSheetItem = {
+    id: string;
+    clientName: string;
+    clientType: string;
+    projectTitle: string;
+    projectType: string;
+    tags: string[];
+    priority: 'High' | 'Medium' | 'Low';
+    status: 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled';
+    estimatedHours: number;
+    startDate: string; // ISO date string
+    endDate: string; // ISO date string
+    leadAssignee: string;
+    virtualAssistant?: string;
+    freelancers?: string[];
+    coders?: string[];
+    projectLeader?: string;
+    githubLink?: string;
+    loomLink?: string;
+    whatsappLink?: string;
+    oneDriveLink?: string;
+};

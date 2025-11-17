@@ -1,0 +1,190 @@
+
+'use client';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  FolderKanban,
+  PlusCircle,
+  Search,
+  MoreVertical,
+  ArrowUpDown,
+} from 'lucide-react';
+import type { ProjectSheetItem } from '@/lib/definitions';
+import { useState, useMemo } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const mockProjectData: ProjectSheetItem[] = [
+  {
+    id: 'proj-001',
+    clientName: 'Stellar Solutions',
+    clientType: 'Enterprise',
+    projectTitle: 'QuantumLeap CRM',
+    projectType: 'Web App',
+    tags: ['CRM', 'SaaS'],
+    priority: 'High',
+    status: 'In Progress',
+    estimatedHours: 250,
+    startDate: '2024-06-01',
+    endDate: '2024-12-31',
+    leadAssignee: 'Alex Doe',
+  },
+  {
+    id: 'proj-002',
+    clientName: 'Orion Commerce',
+    clientType: 'Startup',
+    projectTitle: 'Nova E-commerce Platform',
+    projectType: 'E-commerce',
+    tags: ['React', 'Next.js'],
+    priority: 'High',
+    status: 'In Progress',
+    estimatedHours: 400,
+    startDate: '2024-05-15',
+    endDate: '2025-01-31',
+    leadAssignee: 'Maria Garcia',
+  },
+  {
+    id: 'proj-003',
+    clientName: 'Meridian Inc.',
+    clientType: 'Corporate',
+    projectTitle: 'Project Phoenix',
+    projectType: 'Internal Tool',
+    tags: ['data-viz', 'reporting'],
+    priority: 'Medium',
+    status: 'On Hold',
+    estimatedHours: 120,
+    startDate: '2024-07-01',
+    endDate: '2024-10-31',
+    leadAssignee: 'Sam Wilson',
+  },
+];
+
+
+export default function AdminProjectsPage() {
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const filteredProjects = useMemo(() => {
+    return mockProjectData.filter(p => 
+      p.projectTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  }, [searchQuery]);
+
+  return (
+    <div className="p-4 sm:p-8">
+       <header className="mb-8 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <FolderKanban className="h-8 w-8 text-primary"/>
+          <div>
+            <h1 className="text-2xl font-bold">Project Management</h1>
+            <p className="text-muted-foreground">Create and maintain project data.</p>
+          </div>
+        </div>
+        <Button>
+          <PlusCircle className="mr-2 h-4 w-4" /> Create Project
+        </Button>
+      </header>
+
+      <main>
+        <Card>
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle>All Projects</CardTitle>
+                        <CardDescription>
+                            {mockProjectData.length} projects found.
+                        </CardDescription>
+                    </div>
+                    <div className="relative w-full max-w-sm">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input 
+                        placeholder="Search projects..." 
+                        className="pl-10"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Project Title</TableHead>
+                                <TableHead>Client</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Priority</TableHead>
+                                <TableHead>Assignee</TableHead>
+                                <TableHead>Start Date</TableHead>
+                                <TableHead>End Date</TableHead>
+                                <TableHead><span className="sr-only">Actions</span></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredProjects.map((project) => (
+                                <TableRow key={project.id}>
+                                    <TableCell className="font-medium">{project.projectTitle}</TableCell>
+                                    <TableCell>{project.clientName}</TableCell>
+                                    <TableCell>
+                                        <Badge
+                                            variant={
+                                                project.status === 'In Progress' ? 'default' :
+                                                project.status === 'On Hold' ? 'secondary' :
+                                                'outline'
+                                            }
+                                        >
+                                            {project.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>{project.priority}</TableCell>
+                                    <TableCell>{project.leadAssignee}</TableCell>
+                                    <TableCell>{project.startDate}</TableCell>
+                                    <TableCell>{project.endDate}</TableCell>
+                                    <TableCell>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                <DropdownMenuItem>View Details</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+            </CardContent>
+        </Card>
+      </main>
+
+    </div>
+  );
+}
