@@ -34,6 +34,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { CreateEmployeeSheet } from '@/components/admin/create-employee-sheet';
 import { ViewEmployeeDialog } from '@/components/admin/view-employee-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const mockEmployeeData: Employee[] = [
     { id: 'emp-001', name: 'Alex Doe', skills: ['React', 'Node.js', 'TypeScript'], projects: ['QuantumLeap CRM', 'Odyssey Mobile App'], email: 'alex.doe@example.com', sheetId: 'sheet-001', active: true, type: 'Lead' },
@@ -59,6 +69,7 @@ export default function AdminEmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>(mockEmployeeData);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   const filteredEmployees = useMemo(() => {
@@ -82,6 +93,19 @@ export default function AdminEmployeesPage() {
   const handleViewClick = (employee: Employee) => {
     setSelectedEmployee(employee);
     setIsViewDialogOpen(true);
+  };
+
+  const handleDeactivateClick = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsDeactivateDialogOpen(true);
+  };
+
+  const handleDeactivateConfirm = () => {
+    if (selectedEmployee) {
+      setEmployees(prev => prev.map(e => e.id === selectedEmployee.id ? { ...e, active: false } : e));
+      setIsDeactivateDialogOpen(false);
+      setSelectedEmployee(null);
+    }
   };
   
   const handleSaveEmployee = (employeeData: Omit<Employee, 'id' | 'projects' | 'sheetId'>, id?: string) => {
@@ -181,6 +205,7 @@ export default function AdminEmployeesPage() {
                                                 <DropdownMenuItem onClick={() => handleViewClick(employee)}>View Details</DropdownMenuItem>
                                                 <DropdownMenuItem 
                                                   className="text-destructive"
+                                                  onClick={() => handleDeactivateClick(employee)}
                                                 >
                                                   Deactivate
                                                 </DropdownMenuItem>
@@ -206,6 +231,25 @@ export default function AdminEmployeesPage() {
         onOpenChange={setIsViewDialogOpen}
         employee={selectedEmployee}
       />
+       <AlertDialog open={isDeactivateDialogOpen} onOpenChange={setIsDeactivateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will mark &quot;{selectedEmployee?.name}&quot; as inactive.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeactivateConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Deactivate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
