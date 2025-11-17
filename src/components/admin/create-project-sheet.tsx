@@ -36,7 +36,7 @@ const statusEnum = [
 
 const formSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
-  clientType: z.string().min(1, 'Client type is required'),
+  clientType: z.enum(['New', 'Existing']),
   projectTitle: z.string().min(1, 'Project title is required'),
   projectDescription: z.string().optional(),
   projectType: z.string().min(1, 'Project type is required'),
@@ -78,7 +78,7 @@ export function CreateProjectSheet({
     resolver: zodResolver(formSchema),
     defaultValues: {
       clientName: '',
-      clientType: '',
+      clientType: 'New',
       projectTitle: '',
       projectDescription: '',
       projectType: '',
@@ -104,6 +104,7 @@ export function CreateProjectSheet({
     if (isEditMode && project) {
       form.reset({
         ...project,
+        clientType: project.clientType as 'New' | 'Existing',
         tags: project.tags.join(', '),
         freelancers: project.freelancers?.join(', '),
         coders: project.coders?.join(', '),
@@ -111,7 +112,7 @@ export function CreateProjectSheet({
     } else {
       form.reset({
         clientName: '',
-        clientType: '',
+        clientType: 'New',
         projectTitle: '',
         projectDescription: '',
         projectType: '',
@@ -163,7 +164,17 @@ export function CreateProjectSheet({
                                 <FormItem><FormLabel>Client Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
                              <FormField name="clientType" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Client Type</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormItem>
+                                  <FormLabel>Client Type</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                      <SelectContent>
+                                          <SelectItem value="New">New</SelectItem>
+                                          <SelectItem value="Existing">Existing</SelectItem>
+                                      </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
                             )}/>
                         </div>
                         <FormField name="projectTitle" control={form.control} render={({ field }) => (
