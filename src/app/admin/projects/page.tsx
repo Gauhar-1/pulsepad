@@ -136,10 +136,10 @@ export default function AdminProjectsPage() {
     }
   };
 
-  const handleSaveProject = (projectData: Omit<ProjectSheetItem, 'id'>, id?: string) => {
+  const handleSaveProject = (projectData: Omit<ProjectSheetItem, 'id' | 'tags'> & { tags: string[] }, id?: string) => {
     if (id) {
         // Update existing project
-        setProjects(prev => prev.map(p => p.id === id ? { ...projectData, id } : p));
+        setProjects(prev => prev.map(p => p.id === id ? { ...p, ...projectData, id } : p));
     } else {
         // Add new project
         const projectWithId = { ...projectData, id: `proj-${Date.now()}` };
@@ -207,8 +207,8 @@ export default function AdminProjectsPage() {
                                     <TableCell>
                                         <Badge
                                             variant={
-                                                project.status === 'In Progress' ? 'default' :
-                                                project.status === 'On Hold' ? 'secondary' :
+                                                project.status === 'In Progress' || project.status === 'Active' ? 'default' :
+                                                project.status === 'On Hold' || project.status === 'Stalled' ? 'secondary' :
                                                 'outline'
                                             }
                                         >
@@ -271,7 +271,7 @@ export default function AdminProjectsPage() {
       <CreateProjectSheet 
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
-        onSaveProject={handleSaveProject}
+        onSaveProject={handleSaveProject as any}
         project={selectedProject}
       />
 

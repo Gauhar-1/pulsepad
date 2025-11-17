@@ -26,6 +26,13 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { useEffect } from 'react';
 
+const statusEnum = [
+    'In Progress', 'On Hold', 'Completed', 'Cancelled', 
+    'Client Meeting Done', 'Contact Made', 'Active', 'Reconnected', 
+    'Stalled', 'Requirement Sent', 'Waiting for Requirement', 
+    'Awaiting Testimonial', 'Training'
+] as const;
+
 const formSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
   clientType: z.string().min(1, 'Client type is required'),
@@ -33,7 +40,7 @@ const formSchema = z.object({
   projectType: z.string().min(1, 'Project type is required'),
   tags: z.string(),
   priority: z.enum(['High', 'Medium', 'Low']),
-  status: z.enum(['In Progress', 'On Hold', 'Completed', 'Cancelled']),
+  status: z.enum(statusEnum),
   estimatedHours: z.coerce.number().positive('Must be a positive number'),
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
@@ -89,15 +96,31 @@ export function CreateProjectSheet({
         tags: project.tags.join(', '),
       });
     } else {
-      form.reset();
+      form.reset({
+        clientName: '',
+        clientType: '',
+        projectTitle: '',
+        projectType: '',
+        tags: '',
+        priority: 'Medium',
+        status: 'In Progress',
+        estimatedHours: 0,
+        startDate: '',
+        endDate: '',
+        leadAssignee: '',
+        githubLink: '',
+        loomLink: '',
+        whatsappLink: '',
+        oneDriveLink: '',
+      });
     }
   }, [project, isEditMode, form]);
 
   const onSubmit = (values: FormValues) => {
-    const projectData: Omit<ProjectSheetItem, 'id'> = {
+    const projectData = {
         ...values,
         tags: values.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
-    };
+    } as Omit<ProjectSheetItem, 'id'>;
     onSaveProject(projectData, project?.id);
     onOpenChange(false);
   };
@@ -143,7 +166,11 @@ export function CreateProjectSheet({
                             <FormField name="status" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                    <SelectContent><SelectItem value="In Progress">In Progress</SelectItem><SelectItem value="On Hold">On Hold</SelectItem><SelectItem value="Completed">Completed</SelectItem><SelectItem value="Cancelled">Cancelled</SelectItem></SelectContent>
+                                    <SelectContent>
+                                        {statusEnum.map(status => (
+                                            <SelectItem key={status} value={status}>{status}</SelectItem>
+                                        ))}
+                                    </SelectContent>
                                 </Select><FormMessage /></FormItem>
                             )}/>
                         </div>

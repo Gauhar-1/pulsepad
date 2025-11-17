@@ -78,8 +78,8 @@ export function ViewProjectDialog({
                             <p className="text-sm font-medium text-muted-foreground">Status</p>
                             <Badge
                                 variant={
-                                    project.status === 'In Progress' ? 'default' :
-                                    project.status === 'On Hold' ? 'secondary' :
+                                    project.status === 'In Progress' || project.status === 'Active' ? 'default' :
+                                    project.status === 'On Hold' || project.status === 'Stalled' ? 'secondary' :
                                     'outline'
                                 }
                             >

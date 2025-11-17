@@ -36,7 +36,7 @@ export type ProjectSheetItem = {
     projectType: string;
     tags: string[];
     priority: 'High' | 'Medium' | 'Low';
-    status: 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled';
+    status: 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled' | 'Client Meeting Done' | 'Contact Made' | 'Active' | 'Reconnected' | 'Stalled' | 'Requirement Sent' | 'Waiting for Requirement' | 'Awaiting Testimonial' | 'Training';
     estimatedHours: number;
     startDate: string; // ISO date string
     endDate: string; // ISO date string
