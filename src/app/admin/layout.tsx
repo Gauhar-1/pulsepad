@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { User } from '@/lib/definitions';
 import { Logo } from '@/components/logo';
-import { LogOut, FolderKanban } from 'lucide-react';
+import { LogOut, FolderKanban, Users } from 'lucide-react';
 import Link from 'next/link';
 import {
   SidebarProvider,
@@ -38,6 +38,7 @@ const useMockUser = () => {
 
 const adminNavItems = [
   { href: '/admin/projects', icon: FolderKanban, label: 'Projects' },
+  { href: '/admin/employees', icon: Users, label: 'Employees' },
 ];
 
 export default function AdminLayout({

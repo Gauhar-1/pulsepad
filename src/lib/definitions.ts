@@ -31,7 +31,7 @@ export type Client = {
 export type ProjectSheetItem = {
     id: string;
     clientName: string;
-    clientType: string;
+    clientType: 'New' | 'Existing';
     projectTitle: string;
     projectDescription?: string;
     projectType: 'Client' | 'Research' | 'Management' | 'Training';
@@ -50,4 +50,16 @@ export type ProjectSheetItem = {
     loomLink?: string;
     whatsappLink?: string;
     oneDriveLink?: string;
+};
+
+
+export type Employee = {
+    id: string;
+    name: string;
+    skills: string[];
+    projects: string[];
+    email: string;
+    sheetId: string;
+    active: boolean;
+    type: 'Full-time' | 'Part-time' | 'Contractor' | 'Intern';
 };
