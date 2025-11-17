@@ -1,3 +1,4 @@
+
 export type User = {
   id: string; 
   name: string;
@@ -61,5 +62,5 @@ export type Employee = {
     email: string;
     sheetId: string;
     active: boolean;
-    type: 'Full-time' | 'Part-time' | 'Contractor' | 'Intern';
+    type: 'Lead' | 'Core' | 'VA' | 'Coder' | 'Freelancer';
 };

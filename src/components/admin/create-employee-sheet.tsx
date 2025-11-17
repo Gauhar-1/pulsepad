@@ -27,7 +27,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useEffect } from 'react';
 import { Switch } from '../ui/switch';
 
-const employeeTypeEnum = ['Full-time', 'Part-time', 'Contractor', 'Intern'] as const;
+const employeeTypeEnum = ['Lead', 'Core', 'VA', 'Coder', 'Freelancer'] as const;
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -60,7 +60,7 @@ export function CreateEmployeeSheet({
       name: '',
       email: '',
       skills: '',
-      type: 'Full-time',
+      type: 'Core',
       active: true,
     },
   });
@@ -76,7 +76,7 @@ export function CreateEmployeeSheet({
         name: '',
         email: '',
         skills: '',
-        type: 'Full-time',
+        type: 'Core',
         active: true,
       });
     }
