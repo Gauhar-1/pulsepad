@@ -124,7 +124,7 @@ export default function EmployeeDetailPage() {
             {employee.name}
             </h1>
             <p className="text-lg text-muted-foreground">
-            {employee.type} Employee
+            {employee.email}
             </p>
         </div>
       </header>
@@ -181,7 +181,6 @@ export default function EmployeeDetailPage() {
                         {employee.active ? 'Active' : 'Inactive'}
                     </Badge>
                 </DetailItem>
-                <DetailItem icon={Briefcase} label="Employment Type" value={employee.type} />
                 <DetailItem icon={Wrench} label="Skills">
                     <div className="flex flex-wrap gap-1">
                         {employee.skills.map(skill => <Badge key={skill} variant="secondary">{skill}</Badge>)}
