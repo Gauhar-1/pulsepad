@@ -81,6 +81,10 @@ export default function AdminProjectsPage() {
     return employees.filter(e => e.active && e.type === 'Coder');
   }, [employees]);
 
+  const activeCoreEmployees = useMemo(() => {
+    return employees.filter(e => e.active && e.type === 'Core');
+  }, [employees]);
+
   const handleCreateClick = () => {
     setSelectedProject(null);
     setIsSheetOpen(true);
@@ -250,6 +254,7 @@ export default function AdminProjectsPage() {
         virtualAssistants={activeVAs}
         freelancers={activeFreelancers}
         coders={activeCoders}
+        coreEmployees={activeCoreEmployees}
       />
 
       <ViewProjectDialog

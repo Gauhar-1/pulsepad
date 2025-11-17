@@ -71,6 +71,7 @@ interface CreateProjectSheetProps {
   virtualAssistants: Employee[];
   freelancers: Employee[];
   coders: Employee[];
+  coreEmployees: Employee[];
 }
 
 export function CreateProjectSheet({
@@ -82,6 +83,7 @@ export function CreateProjectSheet({
   virtualAssistants,
   freelancers: allFreelancers,
   coders: allCoders,
+  coreEmployees,
 }: CreateProjectSheetProps) {
   const isEditMode = !!project;
   
@@ -371,7 +373,22 @@ export function CreateProjectSheet({
                                 )}
                             />
                             <FormField name="projectLeader" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Project Leader / Update In-charge</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormItem>
+                                    <FormLabel>Project Leader / Update In-charge</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value} >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a project leader" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {coreEmployees.map(emp => (
+                                                <SelectItem key={emp.id} value={emp.name}>{emp.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
                             )}/>
                         </div>
                         
