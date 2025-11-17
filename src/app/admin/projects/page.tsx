@@ -23,7 +23,6 @@ import {
   PlusCircle,
   Search,
   MoreVertical,
-  ArrowUpDown,
 } from 'lucide-react';
 import type { ProjectSheetItem } from '@/lib/definitions';
 import { useState, useMemo } from 'react';
@@ -33,6 +32,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const mockProjectData: ProjectSheetItem[] = [
   {
@@ -82,14 +91,32 @@ const mockProjectData: ProjectSheetItem[] = [
 
 export default function AdminProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [projects, setProjects] = useState<ProjectSheetItem[]>(mockProjectData);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<ProjectSheetItem | null>(null);
+
   
   const filteredProjects = useMemo(() => {
-    return mockProjectData.filter(p => 
+    return projects.filter(p => 
       p.projectTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  }, [searchQuery]);
+  }, [projects, searchQuery]);
+
+  const handleDeleteClick = (project: ProjectSheetItem) => {
+    setSelectedProject(project);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (selectedProject) {
+      setProjects(projects.filter(p => p.id !== selectedProject.id));
+      setIsDeleteDialogOpen(false);
+      setSelectedProject(null);
+    }
+  };
+
 
   return (
     <div className="admin-dashboard-gradient min-h-screen p-4 sm:p-8">
@@ -113,7 +140,7 @@ export default function AdminProjectsPage() {
                     <div>
                         <CardTitle>All Projects</CardTitle>
                         <CardDescription>
-                            {mockProjectData.length} projects found.
+                            {projects.length} projects found.
                         </CardDescription>
                     </div>
                     <div className="relative w-full max-w-sm">
@@ -170,9 +197,14 @@ export default function AdminProjectsPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent>
-                                                <DropdownMenuItem>Edit</DropdownMenuItem>
-                                                <DropdownMenuItem>View Details</DropdownMenuItem>
-                                                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => console.log('Edit', project.id)}>Edit</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => console.log('View', project.id)}>View Details</DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                  className="text-destructive"
+                                                  onClick={() => handleDeleteClick(project)}
+                                                >
+                                                  Delete
+                                                </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
@@ -185,6 +217,26 @@ export default function AdminProjectsPage() {
         </Card>
       </main>
 
+       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              project &quot;{selectedProject?.projectTitle}&quot;.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
