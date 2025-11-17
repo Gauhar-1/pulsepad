@@ -29,7 +29,7 @@ import { Textarea } from '../ui/textarea';
 import { Checkbox } from '../ui/checkbox';
 
 const statusEnum = [
-    'In Progress', 'On Hold', 'Completed', 'Cancelled', 
+    'On Hold', 'Completed', 'Cancelled', 
     'Client Meeting Done', 'Contact Made', 'Active', 'Reconnected', 
     'Stalled', 'Requirement Sent', 'Waiting for Requirement', 
     'Awaiting Testimonial', 'Training'
@@ -97,7 +97,7 @@ export function CreateProjectSheet({
       projectType: 'Client',
       tags: '',
       priority: 'Medium',
-      status: 'In Progress',
+      status: 'Active',
       estimatedHours: 0,
       startDate: '',
       endDate: '',
@@ -132,7 +132,7 @@ export function CreateProjectSheet({
         projectType: 'Client',
         tags: '',
         priority: 'Medium',
-        status: 'In Progress',
+        status: 'Active',
         estimatedHours: 0,
         startDate: '',
         endDate: '',

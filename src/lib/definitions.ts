@@ -38,7 +38,7 @@ export type ProjectSheetItem = {
     projectType: 'Client' | 'Research' | 'Management' | 'Training';
     tags: string[];
     priority: 'High' | 'Medium' | 'Low';
-    status: 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled' | 'Client Meeting Done' | 'Contact Made' | 'Active' | 'Reconnected' | 'Stalled' | 'Requirement Sent' | 'Waiting for Requirement' | 'Awaiting Testimonial' | 'Training';
+    status: 'On Hold' | 'Completed' | 'Cancelled' | 'Client Meeting Done' | 'Contact Made' | 'Active' | 'Reconnected' | 'Stalled' | 'Requirement Sent' | 'Waiting for Requirement' | 'Awaiting Testimonial' | 'Training';
     estimatedHours: number;
     startDate: string; // ISO date string
     endDate: string; // ISO date string

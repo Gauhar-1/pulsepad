@@ -86,7 +86,7 @@ export default function AdminProjectsPage() {
       return searchFiltered;
     }
     if (activeTab === 'active') {
-      return searchFiltered.filter(p => p.status === 'Active' || p.status === 'In Progress');
+      return searchFiltered.filter(p => p.status === 'Active');
     }
     if (activeTab === 'high-priority') {
       return searchFiltered.filter(p => p.priority === 'High');
@@ -239,7 +239,7 @@ export default function AdminProjectsPage() {
                                     <TableCell>
                                         <Badge
                                             variant={
-                                                project.status === 'In Progress' || project.status === 'Active' ? 'default' :
+                                                project.status === 'Active' ? 'default' :
                                                 project.status === 'On Hold' || project.status === 'Stalled' ? 'secondary' :
                                                 'outline'
                                             }
