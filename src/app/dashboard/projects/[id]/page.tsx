@@ -2,9 +2,9 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { mockProjectData, mockEmployeeData } from '@/lib/mock-data';
-import type { ProjectSheetItem, Employee, Update } from '@/lib/definitions';
+import type { ProjectSheetItem, Employee, Update, Milestone } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -17,17 +17,20 @@ import {
   Github,
   Link as LinkIcon,
   ListChecks,
-  Milestone,
+  Milestone as MilestoneIcon,
   Tag,
   User,
   Users,
   MessageSquare,
   Star,
+  Flag,
+  CalendarClock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getAllUpdates } from '@/lib/api';
+import { differenceInDays, formatDistanceToNowStrict } from 'date-fns';
 
 const DetailItem = ({
   icon: Icon,
@@ -64,7 +67,7 @@ export default function EmployeeProjectDetailPage() {
   const [project, setProject] = useState<ProjectSheetItem | null>(null);
   const [team, setTeam] = useState<Employee[]>([]);
   const [updates, setUpdates] = useState<UpdateWithAuthor[]>([]);
-
+  
   useEffect(() => {
     const foundProject = mockProjectData.find((p) => p.id === id);
     if (foundProject) {
@@ -90,7 +93,7 @@ export default function EmployeeProjectDetailPage() {
         const projectUpdates = allUpdates
             .filter(u => u.projectId === id)
             .map(u => {
-                const author = mockEmployeeData.find(e => e.id === u.userId);
+                const author = mockEmployeeData.find(e => `user-${e.id.split('-')[1]}` === u.userId);
                 return {
                     ...u,
                     authorName: author?.name || 'Unknown User',
@@ -103,6 +106,15 @@ export default function EmployeeProjectDetailPage() {
       fetchUpdates();
     }
   }, [id]);
+
+  const nextMilestone = useMemo(() => {
+    if (!project?.milestones) return null;
+    const upcoming = project.milestones
+      .filter(m => m.status === 'upcoming' && new Date(m.date) >= new Date())
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return upcoming[0];
+  }, [project]);
+
 
   if (!project) {
     if (project === null) {
@@ -163,7 +175,7 @@ export default function EmployeeProjectDetailPage() {
             <Card className="mt-8">
                  <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Milestone /> Recent Updates
+                      <MilestoneIcon /> Recent Updates
                     </CardTitle>
                     <CardDescription>A log of daily updates from the team.</CardDescription>
                 </CardHeader>
@@ -195,6 +207,26 @@ export default function EmployeeProjectDetailPage() {
         </div>
 
         <div className="space-y-8">
+            {nextMilestone && (
+              <Card className="bg-primary/10 border-primary/50">
+                  <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-primary">
+                          <Flag /> Next Milestone
+                      </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-4xl font-bold text-primary">
+                      {differenceInDays(new Date(nextMilestone.date), new Date())}
+                    </p>
+                     <p className="text-sm font-medium text-primary/80">days remaining</p>
+                     <Separator className="my-4" />
+                     <p className="font-semibold">{nextMilestone.name}</p>
+                     <p className="text-sm text-muted-foreground">
+                        Due on {new Date(nextMilestone.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                     </p>
+                  </CardContent>
+              </Card>
+            )}
           <Card>
             <CardHeader>
               <CardTitle>Team</CardTitle>

@@ -1,4 +1,5 @@
 
+
 export type User = {
   id: string; 
   name: string;
@@ -29,6 +30,13 @@ export type Client = {
   email: string;
 };
 
+export type Milestone = {
+  id: string;
+  name:string;
+  date: string; // ISO date string
+  status: 'upcoming' | 'completed' | 'missed';
+}
+
 export type ProjectSheetItem = {
     id: string;
     clientName: string;
@@ -51,6 +59,7 @@ export type ProjectSheetItem = {
     loomLink?: string;
     whatsappLink?: string;
     oneDriveLink?: string;
+    milestones?: Milestone[];
 };
 
 
