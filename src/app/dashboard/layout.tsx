@@ -44,7 +44,7 @@ const useMockUser = () => {
 };
 
 const employeeNavItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Projects' },
+  { href: '/dashboard/projects', icon: LayoutDashboard, label: 'My Projects' },
   { href: '/dashboard/training', icon: BookOpen, label: 'Training' },
   { href: '/dashboard/reports', icon: FileText, label: 'Reports' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
@@ -63,6 +63,12 @@ export default function DashboardLayout({
     if (!loading && !user) {
       router.push('/login');
     }
+    if (!loading && user?.role === 'admin') {
+      router.push('/admin/dashboard');
+    }
+     if (!loading && user?.role === 'client') {
+      router.push('/client');
+    }
   }, [user, loading, router]);
 
   const handleSignOut = () => {
@@ -70,7 +76,7 @@ export default function DashboardLayout({
     router.push('/login');
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
         Loading...
@@ -78,8 +84,12 @@ export default function DashboardLayout({
     );
   }
 
-  if (!user || user.role === 'admin' || user.role === 'applicant' || user.role === 'client') {
-    return <>{children}</>;
+  if (user.role === 'admin' || user.role === 'applicant' || user.role === 'client') {
+     return (
+      <div className="flex h-screen items-center justify-center">
+        Redirecting...
+      </div>
+    );
   }
 
   const navItems = employeeNavItems;
@@ -96,7 +106,7 @@ export default function DashboardLayout({
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === item.href}
+                  isActive={pathname.startsWith(item.href)}
                 >
                   <Link href={item.href}>
                     <item.icon />
