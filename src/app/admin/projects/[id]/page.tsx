@@ -90,10 +90,14 @@ export default function ProjectDetailPage() {
   }
 
   const updatesAndMilestones = [
-    { type: 'milestone', date: '2024-07-15', content: 'Design Phase Complete', icon: Star },
+    ...(project.milestones || []).map(m => ({
+      type: 'milestone',
+      date: m.date,
+      content: m.name,
+      icon: Star,
+    })),
     { type: 'update', date: '2024-07-14', content: 'Finalized the mockups for the dashboard.', author: 'Alex Doe', icon: MessageSquare },
     { type: 'update', date: '2024-07-13', content: 'Initial wireframes shared with the client.', author: 'Alex Doe', icon: MessageSquare },
-    { type: 'milestone', date: '2024-07-01', content: 'Project Kick-off', icon: Star },
   ].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
@@ -226,3 +230,5 @@ const LinkItem = ({ href, icon: Icon, label }: { href: string, icon: React.Eleme
         </Link>
     </Button>
 )
+
+    
