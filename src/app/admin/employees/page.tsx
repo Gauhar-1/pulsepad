@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CreateEmployeeSheet } from '@/components/admin/create-employee-sheet';
+import { ViewEmployeeDialog } from '@/components/admin/view-employee-dialog';
 
 const mockEmployeeData: Employee[] = [
     { id: 'emp-001', name: 'Alex Doe', skills: ['React', 'Node.js', 'TypeScript'], projects: ['QuantumLeap CRM', 'Odyssey Mobile App'], email: 'alex.doe@example.com', sheetId: 'sheet-001', active: true, type: 'Lead' },
@@ -57,6 +58,7 @@ export default function AdminEmployeesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [employees, setEmployees] = useState<Employee[]>(mockEmployeeData);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   const filteredEmployees = useMemo(() => {
@@ -75,6 +77,11 @@ export default function AdminEmployeesPage() {
   const handleEditClick = (employee: Employee) => {
     setSelectedEmployee(employee);
     setIsSheetOpen(true);
+  };
+
+  const handleViewClick = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsViewDialogOpen(true);
   };
   
   const handleSaveEmployee = (employeeData: Omit<Employee, 'id' | 'projects' | 'sheetId'>, id?: string) => {
@@ -171,7 +178,7 @@ export default function AdminEmployeesPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent>
                                                 <DropdownMenuItem onClick={() => handleEditClick(employee)}>Edit</DropdownMenuItem>
-                                                <DropdownMenuItem>View Details</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleViewClick(employee)}>View Details</DropdownMenuItem>
                                                 <DropdownMenuItem 
                                                   className="text-destructive"
                                                 >
@@ -192,6 +199,11 @@ export default function AdminEmployeesPage() {
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         onSaveEmployee={handleSaveEmployee}
+        employee={selectedEmployee}
+      />
+      <ViewEmployeeDialog
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
         employee={selectedEmployee}
       />
     </div>
