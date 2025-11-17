@@ -1,5 +1,8 @@
 
 import type { Employee, ProjectSheetItem } from '@/lib/definitions';
+import { addDays, addMonths, formatISO } from 'date-fns';
+
+const now = new Date();
 
 export const mockEmployeeData: Employee[] = [
     { id: 'emp-001', name: 'Alex Doe', skills: ['React', 'Node.js', 'TypeScript'], projects: ['QuantumLeap CRM', 'Odyssey Mobile App'], email: 'alex.doe@example.com', sheetId: 'sheet-001', active: true, type: 'Lead' },
@@ -44,11 +47,11 @@ export const mockProjectData: ProjectSheetItem[] = [
     whatsappLink: 'https://wa.me/1234567890',
     oneDriveLink: 'https://onedrive.live.com/redir?resid=12345',
     milestones: [
-        { id: 'm1-1', name: 'Kick-off Meeting', date: '2024-06-05', status: 'completed' },
-        { id: 'm1-2', name: 'Design Mockups Approved', date: '2024-06-20', status: 'completed' },
-        { id: 'm1-3', name: 'Alpha Release', date: '2024-09-01', status: 'upcoming' },
-        { id: 'm1-4', name: 'Beta Testing', date: '2024-11-01', status: 'upcoming' },
-        { id: 'm1-5', name: 'Final Launch', date: '2024-12-15', status: 'upcoming' },
+        { id: 'm1-1', name: 'Kick-off Meeting', date: formatISO(addMonths(now, -1), { representation: 'date' }), status: 'completed' },
+        { id: 'm1-2', name: 'Design Mockups Approved', date: formatISO(addDays(now, -15), { representation: 'date' }), status: 'completed' },
+        { id: 'm1-3', name: 'Alpha Release', date: formatISO(addMonths(now, 2), { representation: 'date' }), status: 'upcoming' },
+        { id: 'm1-4', name: 'Beta Testing', date: formatISO(addMonths(now, 4), { representation: 'date' }), status: 'upcoming' },
+        { id: 'm1-5', name: 'Final Launch', date: formatISO(addMonths(now, 5), { representation: 'date' }), status: 'upcoming' },
     ]
   },
   {
@@ -74,9 +77,9 @@ export const mockProjectData: ProjectSheetItem[] = [
     whatsappLink: 'https://wa.me/0987654321',
     oneDriveLink: 'https://onedrive.live.com/redir?resid=67890',
     milestones: [
-      { id: 'm2-1', name: 'Initial Scoping', date: '2024-05-20', status: 'completed' },
-      { id: 'm2-2', name: 'Backend API Deployed', date: '2024-08-15', status: 'upcoming' },
-      { id: 'm2-3', name: 'Storefront V1', date: '2024-10-15', status: 'upcoming' },
+      { id: 'm2-1', name: 'Initial Scoping', date: formatISO(addMonths(now, -2), { representation: 'date' }), status: 'completed' },
+      { id: 'm2-2', name: 'Backend API Deployed', date: formatISO(addDays(now, 20), { representation: 'date' }), status: 'upcoming' },
+      { id: 'm2-3', name: 'Storefront V1', date: formatISO(addMonths(now, 2), { representation: 'date' }), status: 'upcoming' },
     ]
   },
   {
@@ -102,8 +105,8 @@ export const mockProjectData: ProjectSheetItem[] = [
     whatsappLink: '',
     oneDriveLink: '',
     milestones: [
-        { id: 'm3-1', name: 'Data Source Integration', date: '2024-07-25', status: 'upcoming' },
-        { id: 'm3-2', name: 'Model Training Complete', date: '2024-09-10', status: 'upcoming' },
+        { id: 'm3-1', name: 'Data Source Integration', date: formatISO(addDays(now, 10), { representation: 'date' }), status: 'upcoming' },
+        { id: 'm3-2', name: 'Model Training Complete', date: formatISO(addMonths(now, 1), { representation: 'date' }), status: 'upcoming' },
     ]
   },
   {
@@ -123,7 +126,7 @@ export const mockProjectData: ProjectSheetItem[] = [
     projectLeader: 'Fatima Ahmed',
     coders: ['Kenji Tanaka'],
     milestones: [
-        { id: 'm4-1', name: 'Finalize Curriculum', date: '2024-09-20', status: 'upcoming' },
+        { id: 'm4-1', name: 'Finalize Curriculum', date: formatISO(addMonths(now, 1), { representation: 'date' }), status: 'upcoming' },
     ]
   },
    {
@@ -144,8 +147,9 @@ export const mockProjectData: ProjectSheetItem[] = [
     coders: ['Carlos Gomez'],
     projectLeader: 'Maria Garcia',
     milestones: [
-        { id: 'm5-1', name: 'Data Model Definition', date: '2024-08-10', status: 'completed' },
-        { id: 'm5-2', name: 'UI/UX Wireframes', date: '2024-08-25', status: 'upcoming' },
+        { id: 'm5-1', name: 'Data Model Definition', date: formatISO(addDays(now, -5), { representation: 'date' }), status: 'completed' },
+        { id: 'm5-2', name: 'UI/UX Wireframes', date: formatISO(addDays(now, 7), { representation: 'date' }), status: 'upcoming' },
+        { id: 'm5-3', name: 'Dashboard V1', date: formatISO(addMonths(now, 1), { representation: 'date' }), status: 'upcoming' },
     ]
   },
 ];

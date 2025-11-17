@@ -19,13 +19,28 @@ const projects: Project[] = [
 ];
 
 let updates: Update[] = [
-  { id: 'update-1', projectId: 'proj-1', userId: 'user-employee-1', content: 'Finished the main dashboard component and integrated the new charting library.', createdAt: new Date().toISOString() },
-  { id: 'update-2', projectId: 'proj-2', userId: 'user-employee-2', content: 'Fixed the bug in the payment gateway integration.', createdAt: new Date().toISOString() },
-  { id: 'update-3', projectId: 'proj-4', userId: 'user-employee-1', content: 'Deployed the new build to staging for client review.', createdAt: new Date().toISOString() },
-  { id: 'update-4', projectId: 'proj-1', userId: 'user-employee-3', content: 'Initial setup for the new database schema.', createdAt: subDays(new Date(), 1).toISOString() },
-  { id: 'update-5', projectId: 'proj-2', userId: 'user-employee-2', content: 'Updated the UI components based on feedback.', createdAt: subDays(new Date(), 1).toISOString() },
-  { id: 'update-6', projectId: 'proj-4', userId: 'user-employee-1', content: 'User authentication flow is now complete.', createdAt: subDays(new Date(), 2).toISOString() },
-  { id: 'update-7', projectId: 'proj-2', userId: 'user-employee-2', content: 'Met with the client to discuss the project timeline.', createdAt: subDays(new Date(), 3).toISOString() },
+  // Proj-001 (Active)
+  { id: 'update-1', projectId: 'proj-001', userId: 'user-employee-1', content: 'Finished the main dashboard component and integrated the new charting library.', createdAt: new Date().toISOString() },
+  { id: 'update-4', projectId: 'proj-001', userId: 'user-employee-3', content: 'Initial setup for the new database schema.', createdAt: subDays(new Date(), 1).toISOString() },
+  { id: 'update-8', projectId: 'proj-001', userId: 'user-employee-1', content: 'Deployed v1 to staging.', createdAt: subDays(new Date(), 5).toISOString() },
+
+  // Proj-002 (Active)
+  { id: 'update-2', projectId: 'proj-002', userId: 'user-employee-2', content: 'Fixed the bug in the payment gateway integration.', createdAt: new Date().toISOString() },
+  { id: 'update-5', projectId: 'proj-002', userId: 'user-employee-2', content: 'Updated the UI components based on feedback.', createdAt: subDays(new Date(), 1).toISOString() },
+  { id: 'update-7', projectId: 'proj-002', userId: 'user-employee-2', content: 'Met with the client to discuss the project timeline.', createdAt: subDays(new Date(), 3).toISOString() },
+
+  // Proj-003 (Client Meeting Done -> On Hold)
+  { id: 'update-9', projectId: 'proj-003', userId: 'user-employee-3', content: 'Client meeting held, requirements gathered. Project currently on hold pending client feedback.', createdAt: subDays(new Date(), 7).toISOString() },
+  
+  // Proj-004 (Requirement Sent -> now Active)
+  { id: 'update-3', projectId: 'proj-004', userId: 'user-employee-1', content: 'Requirements sent to client for approval.', createdAt: subDays(new Date(), 10).toISOString() },
+  { id: 'update-10', projectId: 'proj-004', userId: 'user-employee-1', content: 'Client approved requirements. Started initial project setup.', createdAt: subDays(new Date(), 2).toISOString() },
+  { id: 'update-11', projectId: 'proj-004', userId: 'user-employee-1', content: 'Completed the basic layout for the training portal.', createdAt: new Date().toISOString() },
+
+  // Proj-005 (Active)
+  { id: 'update-6', projectId: 'proj-005', userId: 'user-employee-1', content: 'User authentication flow is now complete.', createdAt: subDays(new Date(), 2).toISOString() },
+  { id: 'update-12', projectId: 'proj-005', userId: 'user-employee-3', content: 'Began work on the data visualization components.', createdAt: new Date().toISOString() },
+
 ];
 
 
@@ -92,6 +107,6 @@ export async function saveUpdate(projectId: string, content: string, updateId?: 
     content,
     createdAt: new Date().toISOString(),
   };
-  updates.push(newUpdate);
+  updates.unshift(newUpdate);
   return newUpdate;
 }
