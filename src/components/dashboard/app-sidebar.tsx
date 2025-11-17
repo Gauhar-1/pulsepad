@@ -19,7 +19,7 @@ import type { User } from '@/lib/definitions';
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },
-  { href: '#', label: 'Settings', icon: Settings },
+  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
 export function AppSidebar({ user }: { user: User }) {
