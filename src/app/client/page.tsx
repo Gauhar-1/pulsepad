@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Card,
@@ -6,7 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { CheckCircle, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CheckCircle, Clock, Github, Link as LinkIcon, Mail, Phone } from 'lucide-react';
+import Link from 'next/link';
+import { mockProjectData } from '@/lib/mock-data';
 
 const ClientReport = () => {
   const milestones = [
@@ -73,6 +78,77 @@ const ClientReport = () => {
   );
 };
 
+const ProjectLinks = () => {
+    // Assuming the client is associated with the first project for this example
+    const project = mockProjectData[0];
+    const links = [
+        { href: project.githubLink, icon: Github, label: 'GitHub Repository' },
+        { href: project.loomLink, icon: LinkIcon, label: 'Loom Videos' },
+        { href: project.whatsappLink, icon: LinkIcon, label: 'WhatsApp Group' },
+        { href: project.oneDriveLink, icon: LinkIcon, label: 'OneDrive Folder' }
+    ].filter(link => link.href);
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Project Files & Links</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                 {links.length > 0 ? links.map((link) => (
+                    <Button key={link.label} variant="outline" asChild className="w-full justify-start">
+                        <Link href={link.href!} target="_blank" rel="noopener noreferrer">
+                            <link.icon className="mr-2 h-4 w-4" />
+                            {link.label}
+                        </Link>
+                    </Button>
+                )) : (
+                    <p className="text-sm text-muted-foreground">No links available for this project.</p>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
+
+const ContactAdmin = () => {
+    const admin = {
+        name: "Jane Smith",
+        email: "jane.smith@example.com",
+        avatar: "https://i.pravatar.cc/150?u=admin",
+        phone: "+1 (555) 123-4567"
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Contact Your Admin</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center text-center gap-4">
+                <Avatar className="h-20 w-20 border-2 border-primary">
+                    <AvatarImage src={admin.avatar} />
+                    <AvatarFallback>{admin.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                    <p className="font-semibold text-lg">{admin.name}</p>
+                    <p className="text-muted-foreground text-sm">{admin.email}</p>
+                </div>
+                <div className="flex gap-2">
+                    <Button asChild variant="outline">
+                        <a href={`mailto:${admin.email}`}>
+                            <Mail className="mr-2 h-4 w-4" /> Email
+                        </a>
+                    </Button>
+                     <Button asChild>
+                        <a href={`tel:${admin.phone}`}>
+                            <Phone className="mr-2 h-4 w-4" /> Call
+                        </a>
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
+
 export default function ClientPage() {
     return (
       <>
@@ -81,7 +157,15 @@ export default function ClientPage() {
             Project Overview
             </h1>
         </div>
-        <ClientReport />
+        <div className="grid gap-8 md:grid-cols-3">
+            <div className="md:col-span-2">
+                <ClientReport />
+            </div>
+            <div className="space-y-8">
+                <ProjectLinks />
+                <ContactAdmin />
+            </div>
+        </div>
       </>
     );
 }
