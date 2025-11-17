@@ -88,4 +88,5 @@ export type TrainingTask = {
     category: string;
     progress: number;
     progressLogs?: TrainingProgressLog[];
+    assignedTo: string[]; // employee ids
 }
