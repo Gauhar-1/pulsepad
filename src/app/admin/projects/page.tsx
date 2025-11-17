@@ -94,7 +94,7 @@ export default function AdminProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<ProjectSheetItem[]>(mockProjectData);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectSheetItem | null>(null);
 
   
@@ -105,6 +105,16 @@ export default function AdminProjectsPage() {
       p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   }, [projects, searchQuery]);
+
+  const handleCreateClick = () => {
+    setSelectedProject(null);
+    setIsSheetOpen(true);
+  }
+
+  const handleEditClick = (project: ProjectSheetItem) => {
+    setSelectedProject(project);
+    setIsSheetOpen(true);
+  };
 
   const handleDeleteClick = (project: ProjectSheetItem) => {
     setSelectedProject(project);
@@ -119,9 +129,15 @@ export default function AdminProjectsPage() {
     }
   };
 
-  const handleAddProject = (newProject: Omit<ProjectSheetItem, 'id'>) => {
-    const projectWithId = { ...newProject, id: `proj-${Date.now()}` };
-    setProjects(prevProjects => [projectWithId, ...prevProjects]);
+  const handleSaveProject = (projectData: Omit<ProjectSheetItem, 'id'>, id?: string) => {
+    if (id) {
+        // Update existing project
+        setProjects(prev => prev.map(p => p.id === id ? { ...projectData, id } : p));
+    } else {
+        // Add new project
+        const projectWithId = { ...projectData, id: `proj-${Date.now()}` };
+        setProjects(prev => [projectWithId, ...prev]);
+    }
   };
 
 
@@ -135,7 +151,7 @@ export default function AdminProjectsPage() {
             <p className="text-muted-foreground">Create and maintain project data.</p>
           </div>
         </div>
-        <Button onClick={() => setIsCreateSheetOpen(true)}>
+        <Button onClick={handleCreateClick}>
           <PlusCircle className="mr-2 h-4 w-4" /> Create Project
         </Button>
       </header>
@@ -204,7 +220,7 @@ export default function AdminProjectsPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent>
-                                                <DropdownMenuItem onClick={() => console.log('Edit', project.id)}>Edit</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleEditClick(project)}>Edit</DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => console.log('View', project.id)}>View Details</DropdownMenuItem>
                                                 <DropdownMenuItem 
                                                   className="text-destructive"
@@ -246,9 +262,10 @@ export default function AdminProjectsPage() {
       </AlertDialog>
 
       <CreateProjectSheet 
-        open={isCreateSheetOpen}
-        onOpenChange={setIsCreateSheetOpen}
-        onAddProject={handleAddProject}
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        onSaveProject={handleSaveProject}
+        project={selectedProject}
       />
     </div>
   );

@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -19,13 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ProjectSheetItem } from '@/lib/definitions';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
+import { useEffect } from 'react';
 
 const formSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
@@ -50,14 +49,17 @@ type FormValues = z.infer<typeof formSchema>;
 interface CreateProjectSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddProject: (project: Omit<ProjectSheetItem, 'id'>) => void;
+  onSaveProject: (project: Omit<ProjectSheetItem, 'id'>, id?: string) => void;
+  project: ProjectSheetItem | null;
 }
 
 export function CreateProjectSheet({
   open,
   onOpenChange,
-  onAddProject,
+  onSaveProject,
+  project,
 }: CreateProjectSheetProps) {
+  const isEditMode = !!project;
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -80,23 +82,33 @@ export function CreateProjectSheet({
     },
   });
 
+  useEffect(() => {
+    if (isEditMode && project) {
+      form.reset({
+        ...project,
+        tags: project.tags.join(', '),
+      });
+    } else {
+      form.reset();
+    }
+  }, [project, isEditMode, form]);
+
   const onSubmit = (values: FormValues) => {
-    const newProject: Omit<ProjectSheetItem, 'id'> = {
+    const projectData: Omit<ProjectSheetItem, 'id'> = {
         ...values,
         tags: values.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
     };
-    onAddProject(newProject);
+    onSaveProject(projectData, project?.id);
     onOpenChange(false);
-    form.reset();
   };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col sm:max-w-xl">
         <SheetHeader>
-          <SheetTitle>Create New Project</SheetTitle>
+          <SheetTitle>{isEditMode ? 'Edit Project' : 'Create New Project'}</SheetTitle>
           <SheetDescription>
-            Fill out the details below to add a new project.
+            {isEditMode ? 'Update the details of the existing project.' : 'Fill out the details below to add a new project.'}
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
@@ -123,13 +135,13 @@ export function CreateProjectSheet({
 
                         <div className="grid grid-cols-2 gap-4">
                             <FormField name="priority" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Priority</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormItem><FormLabel>Priority</FormLabel><Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                     <SelectContent><SelectItem value="High">High</SelectItem><SelectItem value="Medium">Medium</SelectItem><SelectItem value="Low">Low</SelectItem></SelectContent>
                                 </Select><FormMessage /></FormItem>
                             )}/>
                             <FormField name="status" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                     <SelectContent><SelectItem value="In Progress">In Progress</SelectItem><SelectItem value="On Hold">On Hold</SelectItem><SelectItem value="Completed">Completed</SelectItem><SelectItem value="Cancelled">Cancelled</SelectItem></SelectContent>
                                 </Select><FormMessage /></FormItem>
@@ -173,7 +185,7 @@ export function CreateProjectSheet({
                         Cancel
                     </Button>
                     </SheetClose>
-                    <Button type="submit">Create Project</Button>
+                    <Button type="submit">{isEditMode ? 'Save Changes' : 'Create Project'}</Button>
                 </SheetFooter>
             </form>
         </Form>
