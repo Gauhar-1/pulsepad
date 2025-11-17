@@ -45,6 +45,7 @@ import {
 import { CreateProjectSheet } from '@/components/admin/create-project-sheet';
 import { ViewProjectDialog } from '@/components/admin/view-project-dialog';
 import { mockProjectData, mockEmployeeData } from '@/lib/mock-data';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 export default function AdminProjectsPage() {
@@ -55,15 +56,40 @@ export default function AdminProjectsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectSheetItem | null>(null);
+  const [activeTab, setActiveTab] = useState('all');
 
   
   const filteredProjects = useMemo(() => {
-    return projects.filter(p => 
+    const searchFiltered = projects.filter(p => 
       p.projectTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  }, [projects, searchQuery]);
+
+    if (activeTab === 'all') {
+      return searchFiltered;
+    }
+    if (activeTab === 'active') {
+      return searchFiltered.filter(p => p.status === 'Active' || p.status === 'In Progress');
+    }
+    if (activeTab === 'high-priority') {
+      return searchFiltered.filter(p => p.priority === 'High');
+    }
+    if (activeTab === 'client-meeting-done') {
+      return searchFiltered.filter(p => p.status === 'Client Meeting Done');
+    }
+    if (activeTab === 'req-sent') {
+      return searchFiltered.filter(p => p.status === 'Requirement Sent');
+    }
+    if (activeTab === 'stock') {
+      return searchFiltered.filter(p => p.tags.map(t => t.toLowerCase()).includes('stock'));
+    }
+    if (activeTab === 'training') {
+        return searchFiltered.filter(p => p.projectType === 'Training');
+    }
+    return searchFiltered;
+
+  }, [projects, searchQuery, activeTab]);
 
   const activeLeads = useMemo(() => {
     return employees.filter(e => e.active && e.type === 'Lead');
@@ -147,7 +173,7 @@ export default function AdminProjectsPage() {
                     <div>
                         <CardTitle>All Projects</CardTitle>
                         <CardDescription>
-                            {projects.length} projects found.
+                            {filteredProjects.length} of {projects.length} projects shown.
                         </CardDescription>
                     </div>
                     <div className="relative w-full md:max-w-sm">
@@ -162,64 +188,77 @@ export default function AdminProjectsPage() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Project Title</TableHead>
-                                <TableHead>Client</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="hidden md:table-cell">Priority</TableHead>
-                                <TableHead>Assignee</TableHead>
-                                <TableHead className="hidden lg:table-cell">Start Date</TableHead>
-                                <TableHead className="hidden lg:table-cell">End Date</TableHead>
-                                <TableHead><span className="sr-only">Actions</span></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredProjects.map((project) => (
-                                <TableRow key={project.id}>
-                                    <TableCell className="font-medium max-w-xs truncate">{project.projectTitle}</TableCell>
-                                    <TableCell className="hidden sm:table-cell">{project.clientName}</TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant={
-                                                project.status === 'In Progress' || project.status === 'Active' ? 'default' :
-                                                project.status === 'On Hold' || project.status === 'Stalled' ? 'secondary' :
-                                                'outline'
-                                            }
-                                        >
-                                            {project.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="hidden md:table-cell">{project.priority}</TableCell>
-                                    <TableCell className="hidden sm:table-cell">{project.leadAssignee}</TableCell>
-                                    <TableCell className="hidden lg:table-cell">{project.startDate}</TableCell>
-                                    <TableCell className="hidden lg:table-cell">{project.endDate}</TableCell>
-                                    <TableCell>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent>
-                                                <DropdownMenuItem onClick={() => handleEditClick(project)}>Edit</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleViewClick(project)}>View Details</DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                  className="text-destructive"
-                                                  onClick={() => handleDeleteClick(project)}
-                                                >
-                                                  Delete
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-7 mb-4">
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="active">Active</TabsTrigger>
+                        <TabsTrigger value="high-priority">High Priority</TabsTrigger>
+                        <TabsTrigger value="client-meeting-done">Client Meeting</TabsTrigger>
+                        <TabsTrigger value="req-sent">Reqs Sent</TabsTrigger>
+                        <TabsTrigger value="stock">Stock</TabsTrigger>
+                        <TabsTrigger value="training">Training</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value={activeTab}>
+                      <div className="overflow-x-auto">
+                          <Table>
+                              <TableHeader>
+                                  <TableRow>
+                                      <TableHead>Project Title</TableHead>
+                                      <TableHead>Client</TableHead>
+                                      <TableHead>Status</TableHead>
+                                      <TableHead className="hidden md:table-cell">Priority</TableHead>
+                                      <TableHead>Assignee</TableHead>
+                                      <TableHead className="hidden lg:table-cell">Start Date</TableHead>
+                                      <TableHead className="hidden lg:table-cell">End Date</TableHead>
+                                      <TableHead><span className="sr-only">Actions</span></TableHead>
+                                  </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                  {filteredProjects.map((project) => (
+                                      <TableRow key={project.id}>
+                                          <TableCell className="font-medium max-w-xs truncate">{project.projectTitle}</TableCell>
+                                          <TableCell className="hidden sm:table-cell">{project.clientName}</TableCell>
+                                          <TableCell>
+                                              <Badge
+                                                  variant={
+                                                      project.status === 'In Progress' || project.status === 'Active' ? 'default' :
+                                                      project.status === 'On Hold' || project.status === 'Stalled' ? 'secondary' :
+                                                      'outline'
+                                                  }
+                                              >
+                                                  {project.status}
+                                              </Badge>
+                                          </TableCell>
+                                          <TableCell className="hidden md:table-cell">{project.priority}</TableCell>
+                                          <TableCell className="hidden sm:table-cell">{project.leadAssignee}</TableCell>
+                                          <TableCell className="hidden lg:table-cell">{project.startDate}</TableCell>
+                                          <TableCell className="hidden lg:table-cell">{project.endDate}</TableCell>
+                                          <TableCell>
+                                              <DropdownMenu>
+                                                  <DropdownMenuTrigger asChild>
+                                                      <Button variant="ghost" size="icon">
+                                                          <MoreVertical className="h-4 w-4" />
+                                                      </Button>
+                                                  </DropdownMenuTrigger>
+                                                  <DropdownMenuContent>
+                                                      <DropdownMenuItem onClick={() => handleEditClick(project)}>Edit</DropdownMenuItem>
+                                                      <DropdownMenuItem onClick={() => handleViewClick(project)}>View Details</DropdownMenuItem>
+                                                      <DropdownMenuItem 
+                                                        className="text-destructive"
+                                                        onClick={() => handleDeleteClick(project)}
+                                                      >
+                                                        Delete
+                                                      </DropdownMenuItem>
+                                                  </DropdownMenuContent>
+                                              </DropdownMenu>
+                                          </TableCell>
+                                      </TableRow>
+                                  ))}
+                              </TableBody>
+                          </Table>
+                      </div>
+                    </TabsContent>
+                </Tabs>
             </CardContent>
         </Card>
       </main>
@@ -265,3 +304,5 @@ export default function AdminProjectsPage() {
     </div>
   );
 }
+
+    

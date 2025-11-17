@@ -28,7 +28,7 @@ export const mockProjectData: ProjectSheetItem[] = [
     projectTitle: 'QuantumLeap CRM',
     projectDescription: 'A next-generation CRM platform for enterprise clients, focusing on AI-driven insights and automation. The goal is to enhance sales productivity and streamline customer relationship management.',
     projectType: 'Client',
-    tags: ['CRM', 'SaaS', 'AI'],
+    tags: ['CRM', 'SaaS', 'AI', 'Stock'],
     priority: 'High',
     status: 'In Progress',
     estimatedHours: 250,
@@ -76,7 +76,7 @@ export const mockProjectData: ProjectSheetItem[] = [
     projectType: 'Research',
     tags: ['data-viz', 'reporting', 'ML'],
     priority: 'Medium',
-    status: 'On Hold',
+    status: 'Client Meeting Done',
     estimatedHours: 120,
     startDate: '2024-07-01',
     endDate: '2024-10-31',
@@ -114,7 +114,7 @@ export const mockProjectData: ProjectSheetItem[] = [
     projectTitle: 'Project Management Dashboard',
     projectDescription: 'A comprehensive dashboard for the management team to oversee all ongoing projects, employee assignments, and resource allocation.',
     projectType: 'Management',
-    tags: ['Dashboard', 'Internal', 'Admin'],
+    tags: ['Dashboard', 'Internal', 'Admin', 'Stock'],
     priority: 'High',
     status: 'In Progress',
     estimatedHours: 150,
@@ -126,3 +126,5 @@ export const mockProjectData: ProjectSheetItem[] = [
     projectLeader: 'Maria Garcia',
   },
 ];
+
+    
