@@ -6,12 +6,15 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription
+  CardDescription,
+  CardFooter
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Eye } from 'lucide-react';
 import { mockEmployeeData, mockTrainingTasks } from '@/lib/mock-data';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function AdminTrainingPage() {
   const trainingAssignments = useMemo(() => {
@@ -74,6 +77,14 @@ export default function AdminTrainingPage() {
                       <p className="font-medium">{assignment.task.title}</p>
                       <Badge variant="secondary" className="mt-1">{assignment.task.category}</Badge>
                   </CardContent>
+                   <CardFooter>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href={`/admin/employees/${assignment.employee.id}`}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        View Progress
+                      </Link>
+                    </Button>
+                  </CardFooter>
                 </Card>
               ))}
             </div>
