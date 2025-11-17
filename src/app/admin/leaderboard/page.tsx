@@ -49,7 +49,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 
 
 type Candidate = {
@@ -242,25 +242,25 @@ const Candidates = ({ candidates, searchQuery }: { candidates: Candidate[], sear
 const Insights = ({ candidates }: { candidates: Candidate[] }) => {
     const insightsData = useMemo(() => {
         const totalCandidates = candidates.length;
+        if (totalCandidates === 0) {
+            return { totalCandidates: 0, averageScore: 0, topScore: 0, puzzleAverages: [] };
+        }
+
         const totalScore = candidates.reduce((acc, c) => acc + c.totalScore, 0);
-        const averageScore = totalCandidates > 0 ? (totalScore / totalCandidates) : 0;
-        const topScore = Math.max(...candidates.map(c => c.totalScore), 0);
+        const averageScore = totalScore / totalCandidates;
+        const topScore = Math.max(...candidates.map(c => c.totalScore));
 
-        const scoreDistribution = candidates.reduce((acc, c) => {
-            const score = c.totalScore;
-            const bin = Math.floor(score / 5) * 5;
-            const range = `${bin}-${bin + 4}`;
-            acc[range] = (acc[range] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>);
+        const totalUnblockMe = candidates.reduce((acc, c) => acc + c.unblockMe, 0);
+        const totalMinesweeper = candidates.reduce((acc, c) => acc + c.minesweeper, 0);
+        const totalWaterCapacity = candidates.reduce((acc, c) => acc + c.waterCapacity, 0);
 
-        const chartData = Object.entries(scoreDistribution).map(([name, value]) => ({ name, value })).sort((a, b) => {
-            const a_val = parseInt(a.name.split('-')[0]);
-            const b_val = parseInt(b.name.split('-')[0]);
-            return a_val - b_val;
-        });
+        const puzzleAverages = [
+            { name: 'Unblock Me', avgScore: totalUnblockMe / totalCandidates, fill: 'hsl(var(--chart-1))' },
+            { name: 'Minesweeper', avgScore: totalMinesweeper / totalCandidates, fill: 'hsl(var(--chart-2))' },
+            { name: 'Water Capacity', avgScore: totalWaterCapacity / totalCandidates, fill: 'hsl(var(--chart-3))' },
+        ];
 
-        return { totalCandidates, averageScore, topScore, chartData };
+        return { totalCandidates, averageScore, topScore, puzzleAverages };
     }, [candidates]);
 
     return (
@@ -306,13 +306,16 @@ const Insights = ({ candidates }: { candidates: Candidate[] }) => {
             <Card className="rounded-2xl shadow-lg col-span-1 md:col-span-2 lg:col-span-4">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <LineChart className="h-5 w-5"/>
-                        Score Distribution
+                        <BarChart className="h-5 w-5"/>
+                        Average Score by Puzzle
                     </CardTitle>
+                    <CardDescription>
+                        Comparing the average performance across different puzzles.
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
                     <ResponsiveContainer width="100%" height={350}>
-                        <RechartsBarChart data={insightsData.chartData}>
+                        <RechartsBarChart data={insightsData.puzzleAverages}>
                             <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                             <Tooltip
@@ -322,7 +325,8 @@ const Insights = ({ candidates }: { candidates: Candidate[] }) => {
                                     border: '1px solid hsl(var(--border))',
                                 }}
                             />
-                            <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            <Legend/>
+                            <Bar dataKey="avgScore" name="Average Score" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                         </RechartsBarChart>
                     </ResponsiveContainer>
                 </CardContent>
