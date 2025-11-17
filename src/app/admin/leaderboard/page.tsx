@@ -29,6 +29,7 @@ import {
   Box,
   Droplets,
   LogOut,
+  MoreVertical,
 } from 'lucide-react';
 import type { User as UserType } from '@/lib/definitions';
 import { useEffect, useState } from 'react';
@@ -37,6 +38,12 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/logo';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type Candidate = {
   rank: number;
@@ -82,15 +89,6 @@ const Leaderboard = ({ candidates, searchQuery }: { candidates: Candidate[], sea
         <Button variant="outline">
           <Download className="mr-2 h-4 w-4" /> Export
         </Button>
-      </div>
-      <div className="relative mt-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <Input 
-          placeholder="Search leaderboard..." 
-          className="pl-10"
-          value={searchQuery}
-          readOnly
-        />
       </div>
       <div className="flex items-center gap-4 mt-4">
         <span className="text-sm font-medium text-muted-foreground">Sort by:</span>
@@ -159,18 +157,54 @@ const Candidates = ({ candidates, searchQuery }: { candidates: Candidate[], sear
                     <CardDescription>Manage and view all candidates</CardDescription>
                 </div>
             </div>
-            <div className="relative mt-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                    placeholder="Search candidates..." 
-                    className="pl-10"
-                    value={searchQuery}
-                    readOnly
-                />
-            </div>
         </CardHeader>
         <CardContent>
-            <p>Candidate management interface will be here.</p>
+             <div className="overflow-x-auto">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Candidate ID</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>College</TableHead>
+                            <TableHead>Total Score</TableHead>
+                            <TableHead>Completed</TableHead>
+                            <TableHead><span className="sr-only">Actions</span></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {candidates.map((candidate) => (
+                            <TableRow key={candidate.id}>
+                                <TableCell className="text-muted-foreground">{candidate.id}</TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={candidate.avatarUrl} />
+                                            <AvatarFallback>{candidate.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <span className="font-medium">{candidate.name}</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">{candidate.college}</TableCell>
+                                <TableCell className="font-bold text-green-600">{candidate.totalScore}</TableCell>
+                                <TableCell className="text-muted-foreground">{candidate.completed}</TableCell>
+                                <TableCell>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuItem>View Profile</DropdownMenuItem>
+                                            <DropdownMenuItem>See Assessment</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
         </CardContent>
     </Card>
 );
@@ -266,5 +300,3 @@ export default function LeaderboardPage() {
     </div>
   );
 }
-
-    
