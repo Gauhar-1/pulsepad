@@ -26,6 +26,7 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
+import { Checkbox } from '../ui/checkbox';
 
 const statusEnum = [
     'In Progress', 'On Hold', 'Completed', 'Cancelled', 
@@ -50,7 +51,7 @@ const formSchema = z.object({
   endDate: z.string().min(1, 'End date is required'),
   leadAssignee: z.string().min(1, 'Lead assignee is required'),
   virtualAssistant: z.string().optional(),
-  freelancers: z.string().optional(),
+  freelancers: z.array(z.string()).optional(),
   coders: z.string().optional(),
   projectLeader: z.string().optional(),
   githubLink: z.string().url().optional().or(z.literal('')),
@@ -68,6 +69,7 @@ interface CreateProjectSheetProps {
   project: ProjectSheetItem | null;
   leads: Employee[];
   virtualAssistants: Employee[];
+  freelancers: Employee[];
 }
 
 export function CreateProjectSheet({
@@ -77,6 +79,7 @@ export function CreateProjectSheet({
   project,
   leads,
   virtualAssistants,
+  freelancers: allFreelancers,
 }: CreateProjectSheetProps) {
   const isEditMode = !!project;
   
@@ -96,7 +99,7 @@ export function CreateProjectSheet({
       endDate: '',
       leadAssignee: '',
       virtualAssistant: '',
-      freelancers: '',
+      freelancers: [],
       coders: '',
       projectLeader: '',
       githubLink: '',
@@ -113,7 +116,7 @@ export function CreateProjectSheet({
         clientType: project.clientType as 'New' | 'Existing',
         projectType: project.projectType as 'Client' | 'Research' | 'Management' | 'Training',
         tags: project.tags.join(', '),
-        freelancers: project.freelancers?.join(', '),
+        freelancers: project.freelancers || [],
         coders: project.coders?.join(', '),
       });
     } else {
@@ -131,7 +134,7 @@ export function CreateProjectSheet({
         endDate: '',
         leadAssignee: '',
         virtualAssistant: '',
-        freelancers: '',
+        freelancers: [],
         coders: '',
         projectLeader: '',
         githubLink: '',
@@ -146,7 +149,7 @@ export function CreateProjectSheet({
     const projectData = {
         ...values,
         tags: values.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        freelancers: values.freelancers?.split(',').map(f => f.trim()).filter(f => f) || [],
+        freelancers: values.freelancers || [],
         coders: values.coders?.split(',').map(c => c.trim()).filter(c => c) || [],
     } as Omit<ProjectSheetItem, 'id'>;
     onSaveProject(projectData, project?.id);
@@ -275,9 +278,51 @@ export function CreateProjectSheet({
                                     <FormMessage />
                                 </FormItem>
                             )}/>
-                             <FormField name="freelancers" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Freelancers (comma-separated)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
+                             <FormField
+                                name="freelancers"
+                                control={form.control}
+                                render={() => (
+                                <FormItem>
+                                    <div className="mb-4">
+                                    <FormLabel>Freelancers</FormLabel>
+                                    </div>
+                                    {allFreelancers.map((item) => (
+                                    <FormField
+                                        key={item.id}
+                                        control={form.control}
+                                        name="freelancers"
+                                        render={({ field }) => {
+                                        return (
+                                            <FormItem
+                                            key={item.id}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                            >
+                                            <FormControl>
+                                                <Checkbox
+                                                checked={field.value?.includes(item.name)}
+                                                onCheckedChange={(checked) => {
+                                                    return checked
+                                                    ? field.onChange([...(field.value || []), item.name])
+                                                    : field.onChange(
+                                                        field.value?.filter(
+                                                            (value) => value !== item.name
+                                                        )
+                                                        )
+                                                }}
+                                                />
+                                            </FormControl>
+                                            <FormLabel className="font-normal">
+                                                {item.name}
+                                            </FormLabel>
+                                            </FormItem>
+                                        )
+                                        }}
+                                    />
+                                    ))}
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
                             <FormField name="coders" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Coders (comma-separated)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
