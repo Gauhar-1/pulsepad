@@ -49,7 +49,6 @@ const employeeNavItems = [
   { href: '/dashboard/notifications', icon: Bell, label: 'Notifications' },
   { href: '/dashboard/training', icon: BookOpen, label: 'Training' },
   { href: '/dashboard/reports', icon: FileText, label: 'Reports' },
-  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function DashboardLayout({
