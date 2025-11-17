@@ -3,8 +3,8 @@
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { firestore } from '@/firebase/admin'; // Assuming admin initialization for server actions
-import { auth } from 'firebase-admin';
+import { getFirebaseAdmin } from '@/firebase/admin'; // Assuming admin initialization for server actions
+import { getAuth } from 'firebase-admin/auth';
 
 const UpdateSchema = z.object({
   projectId: z.string(),
@@ -20,6 +20,8 @@ export type State = {
 };
 
 export async function submitUpdate(prevState: State, formData: FormData) {
+  const { firestore } = getFirebaseAdmin();
+  
   const validatedFields = UpdateSchema.safeParse({
     projectId: formData.get('projectId'),
     updateId: formData.get('updateId'),
