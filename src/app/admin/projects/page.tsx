@@ -23,6 +23,7 @@ import {
   PlusCircle,
   Search,
   MoreVertical,
+  Filter,
 } from 'lucide-react';
 import type { Employee, ProjectSheetItem } from '@/lib/definitions';
 import { useState, useMemo } from 'react';
@@ -45,8 +46,23 @@ import {
 import { CreateProjectSheet } from '@/components/admin/create-project-sheet';
 import { ViewProjectDialog } from '@/components/admin/view-project-dialog';
 import { mockProjectData, mockEmployeeData } from '@/lib/mock-data';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
+const filterOptions = [
+    { value: 'all', label: 'All Projects' },
+    { value: 'active', label: 'Active' },
+    { value: 'high-priority', label: 'High Priority' },
+    { value: 'client-meeting-done', label: 'Client Meeting Done' },
+    { value: 'req-sent', label: 'Reqs Sent' },
+    { value: 'stock', label: 'Stock' },
+    { value: 'training', label: 'Training' },
+];
 
 export default function AdminProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -176,89 +192,89 @@ export default function AdminProjectsPage() {
                             {filteredProjects.length} of {projects.length} projects shown.
                         </CardDescription>
                     </div>
-                    <div className="relative w-full md:max-w-sm">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                      <Input 
-                        placeholder="Search projects..." 
-                        className="pl-10"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
+                    <div className="flex items-center gap-2">
+                        <div className="relative w-full md:max-w-sm">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                          <Input 
+                            placeholder="Search projects..." 
+                            className="pl-10"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                          />
+                        </div>
+                        <Select value={activeTab} onValueChange={setActiveTab}>
+                            <SelectTrigger className="w-[180px]">
+                                <Filter className="h-4 w-4 mr-2" />
+                                <SelectValue placeholder="Filter projects" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {filterOptions.map(option => (
+                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
             </CardHeader>
             <CardContent>
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-7 mb-4">
-                        <TabsTrigger value="all">All</TabsTrigger>
-                        <TabsTrigger value="active">Active</TabsTrigger>
-                        <TabsTrigger value="high-priority">High Priority</TabsTrigger>
-                        <TabsTrigger value="client-meeting-done">Client Meeting</TabsTrigger>
-                        <TabsTrigger value="req-sent">Reqs Sent</TabsTrigger>
-                        <TabsTrigger value="stock">Stock</TabsTrigger>
-                        <TabsTrigger value="training">Training</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value={activeTab}>
-                      <div className="overflow-x-auto">
-                          <Table>
-                              <TableHeader>
-                                  <TableRow>
-                                      <TableHead>Project Title</TableHead>
-                                      <TableHead>Client</TableHead>
-                                      <TableHead>Status</TableHead>
-                                      <TableHead className="hidden md:table-cell">Priority</TableHead>
-                                      <TableHead>Assignee</TableHead>
-                                      <TableHead className="hidden lg:table-cell">Start Date</TableHead>
-                                      <TableHead className="hidden lg:table-cell">End Date</TableHead>
-                                      <TableHead><span className="sr-only">Actions</span></TableHead>
-                                  </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                  {filteredProjects.map((project) => (
-                                      <TableRow key={project.id}>
-                                          <TableCell className="font-medium max-w-xs truncate">{project.projectTitle}</TableCell>
-                                          <TableCell className="hidden sm:table-cell">{project.clientName}</TableCell>
-                                          <TableCell>
-                                              <Badge
-                                                  variant={
-                                                      project.status === 'In Progress' || project.status === 'Active' ? 'default' :
-                                                      project.status === 'On Hold' || project.status === 'Stalled' ? 'secondary' :
-                                                      'outline'
-                                                  }
-                                              >
-                                                  {project.status}
-                                              </Badge>
-                                          </TableCell>
-                                          <TableCell className="hidden md:table-cell">{project.priority}</TableCell>
-                                          <TableCell className="hidden sm:table-cell">{project.leadAssignee}</TableCell>
-                                          <TableCell className="hidden lg:table-cell">{project.startDate}</TableCell>
-                                          <TableCell className="hidden lg:table-cell">{project.endDate}</TableCell>
-                                          <TableCell>
-                                              <DropdownMenu>
-                                                  <DropdownMenuTrigger asChild>
-                                                      <Button variant="ghost" size="icon">
-                                                          <MoreVertical className="h-4 w-4" />
-                                                      </Button>
-                                                  </DropdownMenuTrigger>
-                                                  <DropdownMenuContent>
-                                                      <DropdownMenuItem onClick={() => handleEditClick(project)}>Edit</DropdownMenuItem>
-                                                      <DropdownMenuItem onClick={() => handleViewClick(project)}>View Details</DropdownMenuItem>
-                                                      <DropdownMenuItem 
-                                                        className="text-destructive"
-                                                        onClick={() => handleDeleteClick(project)}
-                                                      >
-                                                        Delete
-                                                      </DropdownMenuItem>
-                                                  </DropdownMenuContent>
-                                              </DropdownMenu>
-                                          </TableCell>
-                                      </TableRow>
-                                  ))}
-                              </TableBody>
-                          </Table>
-                      </div>
-                    </TabsContent>
-                </Tabs>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Project Title</TableHead>
+                                <TableHead>Client</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="hidden md:table-cell">Priority</TableHead>
+                                <TableHead>Assignee</TableHead>
+                                <TableHead className="hidden lg:table-cell">Start Date</TableHead>
+                                <TableHead className="hidden lg:table-cell">End Date</TableHead>
+                                <TableHead><span className="sr-only">Actions</span></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredProjects.map((project) => (
+                                <TableRow key={project.id}>
+                                    <TableCell className="font-medium max-w-xs truncate">{project.projectTitle}</TableCell>
+                                    <TableCell className="hidden sm:table-cell">{project.clientName}</TableCell>
+                                    <TableCell>
+                                        <Badge
+                                            variant={
+                                                project.status === 'In Progress' || project.status === 'Active' ? 'default' :
+                                                project.status === 'On Hold' || project.status === 'Stalled' ? 'secondary' :
+                                                'outline'
+                                            }
+                                        >
+                                            {project.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell">{project.priority}</TableCell>
+                                    <TableCell className="hidden sm:table-cell">{project.leadAssignee}</TableCell>
+                                    <TableCell className="hidden lg:table-cell">{project.startDate}</TableCell>
+                                    <TableCell className="hidden lg:table-cell">{project.endDate}</TableCell>
+                                    <TableCell>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem onClick={() => handleEditClick(project)}>Edit</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleViewClick(project)}>View Details</DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                  className="text-destructive"
+                                                  onClick={() => handleDeleteClick(project)}
+                                                >
+                                                  Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             </CardContent>
         </Card>
       </main>
@@ -304,5 +320,3 @@ export default function AdminProjectsPage() {
     </div>
   );
 }
-
-    
