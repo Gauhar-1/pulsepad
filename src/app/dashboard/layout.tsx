@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { PanelLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { User } from '@/lib/definitions';
+import { cn } from '@/lib/utils';
 
 // Mock user hook
 const useMockUser = () => {
@@ -32,16 +33,24 @@ export default function DashboardLayout({
 }) {
   const { user, loading } = useMockUser();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
   }, [user, loading, router]);
+  
+  const isAdminReportPage = user?.role === 'admin' && pathname === '/dashboard/reports';
+
 
   if (loading || !user) {
     // You can show a loading spinner here
-    return <div>Loading...</div>;
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+  
+  if (isAdminReportPage) {
+    return <>{children}</>
   }
 
   return (

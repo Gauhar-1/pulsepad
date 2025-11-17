@@ -86,3 +86,10 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.admin-dashboard-gradient {
+  background: linear-gradient(135deg, #f3e8ff 0%, #e0f7fa 100%);
+}
+.dark .admin-dashboard-gradient {
+  background: linear-gradient(135deg, #2d1a3c 0%, #1a3a3f 100%);
+}
