@@ -33,6 +33,7 @@ export type ProjectSheetItem = {
     clientName: string;
     clientType: string;
     projectTitle: string;
+    projectDescription?: string;
     projectType: string;
     tags: string[];
     priority: 'High' | 'Medium' | 'Low';

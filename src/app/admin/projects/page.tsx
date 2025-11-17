@@ -136,7 +136,7 @@ export default function AdminProjectsPage() {
     }
   };
 
-  const handleSaveProject = (projectData: Omit<ProjectSheetItem, 'id' | 'tags'> & { tags: string[] }, id?: string) => {
+  const handleSaveProject = (projectData: Omit<ProjectSheetItem, 'id' | 'tags' | 'freelancers' | 'coders'> & { tags: string[], freelancers?: string[], coders?: string[] }, id?: string) => {
     if (id) {
         // Update existing project
         setProjects(prev => prev.map(p => p.id === id ? { ...p, ...projectData, id } : p));

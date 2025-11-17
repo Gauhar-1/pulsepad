@@ -25,6 +25,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { useEffect } from 'react';
+import { Textarea } from '../ui/textarea';
 
 const statusEnum = [
     'In Progress', 'On Hold', 'Completed', 'Cancelled', 
@@ -37,6 +38,7 @@ const formSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
   clientType: z.string().min(1, 'Client type is required'),
   projectTitle: z.string().min(1, 'Project title is required'),
+  projectDescription: z.string().optional(),
   projectType: z.string().min(1, 'Project type is required'),
   tags: z.string(),
   priority: z.enum(['High', 'Medium', 'Low']),
@@ -45,6 +47,10 @@ const formSchema = z.object({
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
   leadAssignee: z.string().min(1, 'Lead assignee is required'),
+  virtualAssistant: z.string().optional(),
+  freelancers: z.string().optional(),
+  coders: z.string().optional(),
+  projectLeader: z.string().optional(),
   githubLink: z.string().url().optional().or(z.literal('')),
   loomLink: z.string().url().optional().or(z.literal('')),
   whatsappLink: z.string().url().optional().or(z.literal('')),
@@ -74,6 +80,7 @@ export function CreateProjectSheet({
       clientName: '',
       clientType: '',
       projectTitle: '',
+      projectDescription: '',
       projectType: '',
       tags: '',
       priority: 'Medium',
@@ -82,6 +89,10 @@ export function CreateProjectSheet({
       startDate: '',
       endDate: '',
       leadAssignee: '',
+      virtualAssistant: '',
+      freelancers: '',
+      coders: '',
+      projectLeader: '',
       githubLink: '',
       loomLink: '',
       whatsappLink: '',
@@ -94,12 +105,15 @@ export function CreateProjectSheet({
       form.reset({
         ...project,
         tags: project.tags.join(', '),
+        freelancers: project.freelancers?.join(', '),
+        coders: project.coders?.join(', '),
       });
     } else {
       form.reset({
         clientName: '',
         clientType: '',
         projectTitle: '',
+        projectDescription: '',
         projectType: '',
         tags: '',
         priority: 'Medium',
@@ -108,6 +122,10 @@ export function CreateProjectSheet({
         startDate: '',
         endDate: '',
         leadAssignee: '',
+        virtualAssistant: '',
+        freelancers: '',
+        coders: '',
+        projectLeader: '',
         githubLink: '',
         loomLink: '',
         whatsappLink: '',
@@ -119,7 +137,9 @@ export function CreateProjectSheet({
   const onSubmit = (values: FormValues) => {
     const projectData = {
         ...values,
-        tags: values.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+        tags: values.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        freelancers: values.freelancers?.split(',').map(f => f.trim()).filter(f => f) || [],
+        coders: values.coders?.split(',').map(c => c.trim()).filter(c => c) || [],
     } as Omit<ProjectSheetItem, 'id'>;
     onSaveProject(projectData, project?.id);
     onOpenChange(false);
@@ -148,6 +168,9 @@ export function CreateProjectSheet({
                         </div>
                         <FormField name="projectTitle" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Project Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField name="projectDescription" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Project Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                         <FormField name="projectType" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Project Type</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -185,9 +208,24 @@ export function CreateProjectSheet({
                                 <FormItem><FormLabel>End Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
                         </div>
-                         <FormField name="leadAssignee" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Lead Assignee</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
+                        <div className="space-y-2">
+                             <h3 className="text-sm font-medium">Assignments</h3>
+                             <FormField name="leadAssignee" control={form.control} render={({ field }) => (
+                                <FormItem><FormLabel>Lead Assignee</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )}/>
+                             <FormField name="virtualAssistant" control={form.control} render={({ field }) => (
+                                <FormItem><FormLabel>Virtual Assistant</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )}/>
+                             <FormField name="freelancers" control={form.control} render={({ field }) => (
+                                <FormItem><FormLabel>Freelancers (comma-separated)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )}/>
+                            <FormField name="coders" control={form.control} render={({ field }) => (
+                                <FormItem><FormLabel>Coders (comma-separated)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )}/>
+                            <FormField name="projectLeader" control={form.control} render={({ field }) => (
+                                <FormItem><FormLabel>Project Leader / Update In-charge</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )}/>
+                        </div>
                         
                         <div className="space-y-2">
                             <h3 className="text-sm font-medium">Project Links</h3>

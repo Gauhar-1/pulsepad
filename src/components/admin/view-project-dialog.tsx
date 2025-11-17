@@ -22,6 +22,10 @@ import {
     Tag,
     User,
     ListChecks,
+    FileText,
+    Users,
+    Code,
+    UserCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -32,7 +36,7 @@ interface ViewProjectDialogProps {
 }
 
 const DetailItem = ({ icon: Icon, label, value, isLink=false }: { icon: React.ElementType, label: string, value?: string | number | string[] | null, isLink?: boolean }) => {
-    if (!value) return null;
+    if (!value || (Array.isArray(value) && value.length === 0)) return null;
 
     return (
         <div className="flex gap-3">
@@ -69,6 +73,17 @@ export function ViewProjectDialog({
         </DialogHeader>
         <ScrollArea className="flex-1 -mx-6 px-6">
             <div className="py-4 space-y-6">
+                
+                {project.projectDescription && (
+                    <div className="flex gap-3">
+                        <FileText className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <div>
+                            <p className="text-sm font-medium text-muted-foreground">Description</p>
+                            <p className="text-sm whitespace-pre-wrap">{project.projectDescription}</p>
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                     <DetailItem icon={Briefcase} label="Client" value={project.clientName} />
                     <DetailItem icon={User} label="Client Type" value={project.clientType} />
@@ -97,19 +112,34 @@ export function ViewProjectDialog({
                         </div>
                     </div>
 
-                    <DetailItem icon={User} label="Lead Assignee" value={project.leadAssignee} />
                     <DetailItem icon={Briefcase} label="Priority" value={project.priority} />
-
+                    <DetailItem icon={Clock} label="Estimated Hours" value={`${project.estimatedHours} hrs`} />
                     <DetailItem icon={CalendarDays} label="Start Date" value={project.startDate} />
                     <DetailItem icon={CalendarDays} label="End Date" value={project.endDate} />
-                    <DetailItem icon={Clock} label="Estimated Hours" value={project.estimatedHours} />
-
-                    <DetailItem icon={Github} label="GitHub Link" value={project.githubLink} isLink />
-                    <DetailItem icon={LinkIcon} label="Loom Link" value={project.loomLink} isLink />
-                    <DetailItem icon={LinkIcon} label="WhatsApp Link" value={project.whatsappLink} isLink />
-                    <DetailItem icon={LinkIcon} label="OneDrive Link" value={project.oneDriveLink} isLink />
-
+                    
                 </div>
+                
+                <div className="space-y-6 pt-4 border-t">
+                     <h3 className="text-base font-semibold">Assignments</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <DetailItem icon={User} label="Lead Assignee" value={project.leadAssignee} />
+                        <DetailItem icon={UserCircle} label="Project Leader" value={project.projectLeader} />
+                        <DetailItem icon={User} label="Virtual Assistant" value={project.virtualAssistant} />
+                        <DetailItem icon={Users} label="Freelancers" value={project.freelancers} />
+                        <DetailItem icon={Code} label="Coders" value={project.coders} />
+                    </div>
+                </div>
+
+                <div className="space-y-6 pt-4 border-t">
+                    <h3 className="text-base font-semibold">Links</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <DetailItem icon={Github} label="GitHub Link" value={project.githubLink} isLink />
+                        <DetailItem icon={LinkIcon} label="Loom Link" value={project.loomLink} isLink />
+                        <DetailItem icon={LinkIcon} label="WhatsApp Link" value={project.whatsappLink} isLink />
+                        <DetailItem icon={LinkIcon} label="OneDrive Link" value={project.oneDriveLink} isLink />
+                    </div>
+                </div>
+
             </div>
         </ScrollArea>
         <DialogFooter className="mt-auto">
