@@ -43,6 +43,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { CreateProjectSheet } from '@/components/admin/create-project-sheet';
+import { ViewProjectDialog } from '@/components/admin/view-project-dialog';
 
 const mockProjectData: ProjectSheetItem[] = [
   {
@@ -95,6 +96,7 @@ export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<ProjectSheetItem[]>(mockProjectData);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectSheetItem | null>(null);
 
   
@@ -115,6 +117,11 @@ export default function AdminProjectsPage() {
     setSelectedProject(project);
     setIsSheetOpen(true);
   };
+
+  const handleViewClick = (project: ProjectSheetItem) => {
+    setSelectedProject(project);
+    setIsViewDialogOpen(true);
+  }
 
   const handleDeleteClick = (project: ProjectSheetItem) => {
     setSelectedProject(project);
@@ -221,7 +228,7 @@ export default function AdminProjectsPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent>
                                                 <DropdownMenuItem onClick={() => handleEditClick(project)}>Edit</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => console.log('View', project.id)}>View Details</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleViewClick(project)}>View Details</DropdownMenuItem>
                                                 <DropdownMenuItem 
                                                   className="text-destructive"
                                                   onClick={() => handleDeleteClick(project)}
@@ -265,6 +272,12 @@ export default function AdminProjectsPage() {
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         onSaveProject={handleSaveProject}
+        project={selectedProject}
+      />
+
+      <ViewProjectDialog
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
         project={selectedProject}
       />
     </div>
