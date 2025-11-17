@@ -47,7 +47,6 @@ const useMockUser = () => {
 };
 
 const adminNavItems = [
-    { href: '/admin/leaderboard', icon: BarChart, label: 'Leaderboard' },
     { href: '/admin/projects', icon: FolderKanban, label: 'Projects' },
 ];
 

@@ -92,7 +92,7 @@ export default function AdminProjectsPage() {
   }, [searchQuery]);
 
   return (
-    <div className="p-4 sm:p-8">
+    <div className="admin-dashboard-gradient min-h-screen p-4 sm:p-8">
        <header className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <FolderKanban className="h-8 w-8 text-primary"/>
@@ -107,7 +107,7 @@ export default function AdminProjectsPage() {
       </header>
 
       <main>
-        <Card>
+        <Card className="rounded-2xl shadow-lg">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
