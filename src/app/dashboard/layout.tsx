@@ -4,8 +4,28 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { User } from '@/lib/definitions';
 import { Logo } from '@/components/logo';
-import { LogOut } from 'lucide-react';
+import {
+  LogOut,
+  LayoutDashboard,
+  FileText,
+  Settings,
+  BookOpen,
+} from 'lucide-react';
 import Link from 'next/link';
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+  SidebarTrigger,
+  SidebarFooter,
+} from '@/components/ui/sidebar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 
 // Mock user hook
 const useMockUser = () => {
@@ -23,6 +43,12 @@ const useMockUser = () => {
   return { user, loading };
 };
 
+const navItems = [
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Projects' },
+  { href: '/dashboard/training', icon: BookOpen, label: 'Training' },
+  { href: '/dashboard/reports', icon: FileText, label: 'Reports' },
+  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+];
 
 export default function DashboardLayout({
   children,
@@ -38,33 +64,75 @@ export default function DashboardLayout({
       router.push('/login');
     }
   }, [user, loading, router]);
-  
+
   const handleSignOut = () => {
     sessionStorage.removeItem('mockUser');
     router.push('/login');
   };
-  
+
   if (loading) {
-    // You can show a loading spinner here
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
   }
-  
+
   if (!user || user.role === 'admin') {
-      // Don't render layout for admin, as it has its own layout/pages
-      return <>{children}</>;
+    // Don't render layout for admin, as it has its own layout/pages
+    return <>{children}</>;
   }
-  
+
   return (
-      <div className="min-h-screen flex flex-col">
-        <header className="sticky top-0 z-10 flex h-[57px] items-center justify-between border-b bg-background px-4">
-            <Logo />
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={handleSignOut}>
-                  <LogOut className="h-5 w-5" />
-              </Button>
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader>
+          <Logo />
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            {navItems.map((item) => (
+              <SidebarMenuItem key={item.href}>
+                <Link href={item.href} legacyBehavior passHref>
+                  <SidebarMenuButton
+                    isActive={pathname === item.href}
+                    asChild
+                  >
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarContent>
+        <SidebarFooter>
+          <div className="flex items-center gap-3 p-2">
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={user.avatarUrl} />
+              <AvatarFallback>
+                {user.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 overflow-hidden">
+              <p className="truncate text-sm font-medium">{user.name}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {user.email}
+              </p>
             </div>
+            <Button variant="ghost" size="icon" onClick={handleSignOut} className="shrink-0">
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-[57px] items-center justify-between border-b bg-background px-4 md:hidden">
+          <Logo />
+          <SidebarTrigger />
         </header>
         <main className="flex-1">{children}</main>
-      </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
