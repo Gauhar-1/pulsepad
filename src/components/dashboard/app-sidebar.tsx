@@ -37,25 +37,8 @@ export function AppSidebar({ user }: { user: User }) {
       <SidebarHeader className="p-4">
         <Logo />
       </SidebarHeader>
-      <SidebarContent className="p-4">
-        <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.label}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href}
-                tooltip={{ children: item.label, side: 'right' }}
-              >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter className="p-4">
+      
+      <SidebarFooter className="p-4 mt-auto">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
             <AvatarImage src={user.avatarUrl || undefined} alt={user.name || 'User'} />
