@@ -34,12 +34,14 @@ const statusEnum = [
     'Awaiting Testimonial', 'Training'
 ] as const;
 
+const projectTypeEnum = ['Client', 'Research', 'Management', 'Training'] as const;
+
 const formSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
   clientType: z.enum(['New', 'Existing']),
   projectTitle: z.string().min(1, 'Project title is required'),
   projectDescription: z.string().optional(),
-  projectType: z.string().min(1, 'Project type is required'),
+  projectType: z.enum(projectTypeEnum),
   tags: z.string(),
   priority: z.enum(['High', 'Medium', 'Low']),
   status: z.enum(statusEnum),
@@ -81,7 +83,7 @@ export function CreateProjectSheet({
       clientType: 'New',
       projectTitle: '',
       projectDescription: '',
-      projectType: '',
+      projectType: 'Client',
       tags: '',
       priority: 'Medium',
       status: 'In Progress',
@@ -105,6 +107,7 @@ export function CreateProjectSheet({
       form.reset({
         ...project,
         clientType: project.clientType as 'New' | 'Existing',
+        projectType: project.projectType as 'Client' | 'Research' | 'Management' | 'Training',
         tags: project.tags.join(', '),
         freelancers: project.freelancers?.join(', '),
         coders: project.coders?.join(', '),
@@ -115,7 +118,7 @@ export function CreateProjectSheet({
         clientType: 'New',
         projectTitle: '',
         projectDescription: '',
-        projectType: '',
+        projectType: 'Client',
         tags: '',
         priority: 'Medium',
         status: 'In Progress',
@@ -184,7 +187,18 @@ export function CreateProjectSheet({
                             <FormItem><FormLabel>Project Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                         <FormField name="projectType" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Project Type</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem>
+                                <FormLabel>Project Type</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                        {projectTypeEnum.map(type => (
+                                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
                         )}/>
                         <FormField name="tags" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Tags (comma-separated)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>

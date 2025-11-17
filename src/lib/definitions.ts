@@ -34,7 +34,7 @@ export type ProjectSheetItem = {
     clientType: string;
     projectTitle: string;
     projectDescription?: string;
-    projectType: string;
+    projectType: 'Client' | 'Research' | 'Management' | 'Training';
     tags: string[];
     priority: 'High' | 'Medium' | 'Low';
     status: 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled' | 'Client Meeting Done' | 'Contact Made' | 'Active' | 'Reconnected' | 'Stalled' | 'Requirement Sent' | 'Waiting for Requirement' | 'Awaiting Testimonial' | 'Training';
