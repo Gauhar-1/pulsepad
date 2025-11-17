@@ -30,7 +30,6 @@ export default function AdminTrainingPage() {
               id: employee.id,
               name: employee.name,
               avatarUrl: `https://i.pravatar.cc/150?u=${employee.id}`,
-              type: employee.type,
             },
             task: {
               title: task.title,
@@ -74,7 +73,7 @@ export default function AdminTrainingPage() {
                     </Avatar>
                     <div>
                       <h3 className="font-semibold">{assignment.employee.name}</h3>
-                      <p className="text-sm text-muted-foreground">{assignment.employee.type}</p>
+                      <p className="text-sm text-muted-foreground">Is training in</p>
                     </div>
                   </CardHeader>
                   <CardContent className="flex-grow space-y-2">
@@ -83,7 +82,7 @@ export default function AdminTrainingPage() {
                       {assignment.trainer && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
                             <User className="h-4 w-4" />
-                            <span>Trainer: {assignment.trainer.name}</span>
+                            <span>Trainer: {assignment.trainer.name} ({assignment.trainer.type})</span>
                         </div>
                       )}
                   </CardContent>
