@@ -30,7 +30,7 @@ export function ProjectCard({ project }: { project: ProjectWithUpdate }) {
               </CardDescription>
             </div>
              <Button variant="ghost" size="icon" asChild>
-                <Link href={`/admin/projects/${project.id}`}>
+                <Link href={`/dashboard/projects/${project.id}`}>
                     <Eye className="h-5 w-5 text-muted-foreground" />
                     <span className="sr-only">View Details</span>
                 </Link>
