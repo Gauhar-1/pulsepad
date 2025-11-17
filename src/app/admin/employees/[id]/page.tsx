@@ -3,8 +3,8 @@
 
 import { useParams, notFound } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
-import { mockEmployeeData, mockProjectData } from '@/lib/mock-data';
-import type { Employee, Update, ProjectSheetItem } from '@/lib/definitions';
+import { mockEmployeeData, mockProjectData, mockTrainingTasks } from '@/lib/mock-data';
+import type { Employee, Update, ProjectSheetItem, TrainingTask } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,6 +17,7 @@ import {
   XCircle,
   MessageSquare,
   Calendar,
+  BookOpen,
 } from 'lucide-react';
 import { getAllUpdates } from '@/lib/api';
 
@@ -49,17 +50,33 @@ interface UpdateWithProject extends Update {
     projectName: string;
 }
 
+interface AssignedTraining extends TrainingTask {
+    trainerName: string;
+}
+
 export default function EmployeeDetailPage() {
   const { id } = useParams();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [updates, setUpdates] = useState<UpdateWithProject[]>([]);
   const [projects, setProjects] = useState<ProjectSheetItem[]>([]);
+  const [assignedTrainings, setAssignedTrainings] = useState<AssignedTraining[]>([]);
 
   useEffect(() => {
     const foundEmployee = mockEmployeeData.find((p) => p.id === id);
     if (foundEmployee) {
       setEmployee(foundEmployee);
       setProjects(mockProjectData.filter(p => foundEmployee.projects.includes(p.projectTitle)));
+
+       const trainings = mockTrainingTasks
+        .filter(task => task.assignedTo.includes(foundEmployee.id))
+        .map(task => {
+            const trainer = mockEmployeeData.find(e => e.id === task.trainerId);
+            return {
+                ...task,
+                trainerName: trainer?.name || 'N/A'
+            }
+        });
+       setAssignedTrainings(trainings);
     }
 
     async function fetchUpdates() {
@@ -191,6 +208,29 @@ export default function EmployeeDetailPage() {
               )}
             </CardContent>
           </Card>
+           <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen /> Training Assignments
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {assignedTrainings.length > 0 ? (
+                    <ul className="space-y-4">
+                      {assignedTrainings.map(training => (
+                        <li key={training.id} className="text-sm">
+                           <p className="font-medium">{training.title}</p>
+                           <p className="text-muted-foreground">
+                             Trainer: <span className="font-semibold">{training.trainerName}</span>
+                           </p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No training assigned.</p>
+                  )}
+                </CardContent>
+            </Card>
         </div>
       </div>
     </div>
