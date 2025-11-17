@@ -166,14 +166,14 @@ export default function AdminProjectsPage() {
       <main>
         <Card className="rounded-2xl shadow-lg">
             <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
                         <CardTitle>All Projects</CardTitle>
                         <CardDescription>
                             {projects.length} projects found.
                         </CardDescription>
                     </div>
-                    <div className="relative w-full max-w-sm">
+                    <div className="relative w-full md:max-w-sm">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <Input 
                         placeholder="Search projects..." 
@@ -192,18 +192,18 @@ export default function AdminProjectsPage() {
                                 <TableHead>Project Title</TableHead>
                                 <TableHead>Client</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Priority</TableHead>
+                                <TableHead className="hidden md:table-cell">Priority</TableHead>
                                 <TableHead>Assignee</TableHead>
-                                <TableHead>Start Date</TableHead>
-                                <TableHead>End Date</TableHead>
+                                <TableHead className="hidden lg:table-cell">Start Date</TableHead>
+                                <TableHead className="hidden lg:table-cell">End Date</TableHead>
                                 <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {filteredProjects.map((project) => (
                                 <TableRow key={project.id}>
-                                    <TableCell className="font-medium">{project.projectTitle}</TableCell>
-                                    <TableCell>{project.clientName}</TableCell>
+                                    <TableCell className="font-medium max-w-xs truncate">{project.projectTitle}</TableCell>
+                                    <TableCell className="hidden sm:table-cell">{project.clientName}</TableCell>
                                     <TableCell>
                                         <Badge
                                             variant={
@@ -215,10 +215,10 @@ export default function AdminProjectsPage() {
                                             {project.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{project.priority}</TableCell>
-                                    <TableCell>{project.leadAssignee}</TableCell>
-                                    <TableCell>{project.startDate}</TableCell>
-                                    <TableCell>{project.endDate}</TableCell>
+                                    <TableCell className="hidden md:table-cell">{project.priority}</TableCell>
+                                    <TableCell className="hidden sm:table-cell">{project.leadAssignee}</TableCell>
+                                    <TableCell className="hidden lg:table-cell">{project.startDate}</TableCell>
+                                    <TableCell className="hidden lg:table-cell">{project.endDate}</TableCell>
                                     <TableCell>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
