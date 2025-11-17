@@ -52,7 +52,7 @@ const formSchema = z.object({
   leadAssignee: z.string().min(1, 'Lead assignee is required'),
   virtualAssistant: z.string().optional(),
   freelancers: z.array(z.string()).optional(),
-  coders: z.string().optional(),
+  coders: z.array(z.string()).optional(),
   projectLeader: z.string().optional(),
   githubLink: z.string().url().optional().or(z.literal('')),
   loomLink: z.string().url().optional().or(z.literal('')),
@@ -70,6 +70,7 @@ interface CreateProjectSheetProps {
   leads: Employee[];
   virtualAssistants: Employee[];
   freelancers: Employee[];
+  coders: Employee[];
 }
 
 export function CreateProjectSheet({
@@ -80,6 +81,7 @@ export function CreateProjectSheet({
   leads,
   virtualAssistants,
   freelancers: allFreelancers,
+  coders: allCoders,
 }: CreateProjectSheetProps) {
   const isEditMode = !!project;
   
@@ -100,7 +102,7 @@ export function CreateProjectSheet({
       leadAssignee: '',
       virtualAssistant: '',
       freelancers: [],
-      coders: '',
+      coders: [],
       projectLeader: '',
       githubLink: '',
       loomLink: '',
@@ -117,7 +119,7 @@ export function CreateProjectSheet({
         projectType: project.projectType as 'Client' | 'Research' | 'Management' | 'Training',
         tags: project.tags.join(', '),
         freelancers: project.freelancers || [],
-        coders: project.coders?.join(', '),
+        coders: project.coders || [],
       });
     } else {
       form.reset({
@@ -135,7 +137,7 @@ export function CreateProjectSheet({
         leadAssignee: '',
         virtualAssistant: '',
         freelancers: [],
-        coders: '',
+        coders: [],
         projectLeader: '',
         githubLink: '',
         loomLink: '',
@@ -150,7 +152,7 @@ export function CreateProjectSheet({
         ...values,
         tags: values.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
         freelancers: values.freelancers || [],
-        coders: values.coders?.split(',').map(c => c.trim()).filter(c => c) || [],
+        coders: values.coders || [],
     } as Omit<ProjectSheetItem, 'id'>;
     onSaveProject(projectData, project?.id);
     onOpenChange(false);
@@ -323,9 +325,51 @@ export function CreateProjectSheet({
                                 </FormItem>
                                 )}
                             />
-                            <FormField name="coders" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Coders (comma-separated)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
+                            <FormField
+                                name="coders"
+                                control={form.control}
+                                render={() => (
+                                <FormItem>
+                                    <div className="mb-4">
+                                    <FormLabel>Coders</FormLabel>
+                                    </div>
+                                    {allCoders.map((item) => (
+                                    <FormField
+                                        key={item.id}
+                                        control={form.control}
+                                        name="coders"
+                                        render={({ field }) => {
+                                        return (
+                                            <FormItem
+                                            key={item.id}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                            >
+                                            <FormControl>
+                                                <Checkbox
+                                                checked={field.value?.includes(item.name)}
+                                                onCheckedChange={(checked) => {
+                                                    return checked
+                                                    ? field.onChange([...(field.value || []), item.name])
+                                                    : field.onChange(
+                                                        field.value?.filter(
+                                                            (value) => value !== item.name
+                                                        )
+                                                        )
+                                                }}
+                                                />
+                                            </FormControl>
+                                            <FormLabel className="font-normal">
+                                                {item.name}
+                                            </FormLabel>
+                                            </FormItem>
+                                        )
+                                        }}
+                                    />
+                                    ))}
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
                             <FormField name="projectLeader" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Project Leader / Update In-charge</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>

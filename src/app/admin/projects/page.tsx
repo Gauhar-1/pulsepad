@@ -76,6 +76,10 @@ export default function AdminProjectsPage() {
   const activeFreelancers = useMemo(() => {
     return employees.filter(e => e.active && e.type === 'Freelancer');
   }, [employees]);
+  
+  const activeCoders = useMemo(() => {
+    return employees.filter(e => e.active && e.type === 'Coder');
+  }, [employees]);
 
   const handleCreateClick = () => {
     setSelectedProject(null);
@@ -245,6 +249,7 @@ export default function AdminProjectsPage() {
         leads={activeLeads}
         virtualAssistants={activeVAs}
         freelancers={activeFreelancers}
+        coders={activeCoders}
       />
 
       <ViewProjectDialog
