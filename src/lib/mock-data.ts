@@ -1,6 +1,6 @@
 
 import type { Employee, ProjectSheetItem, TrainingTask } from '@/lib/definitions';
-import { addDays, addMonths, formatISO } from 'date-fns';
+import { addDays, addMonths, formatISO, subDays } from 'date-fns';
 
 const now = new Date();
 
@@ -156,10 +156,57 @@ export const mockProjectData: ProjectSheetItem[] = [
 
 
 export const mockTrainingTasks: TrainingTask[] = [
-  { id: 1, title: 'Advanced React Hooks', description: 'A deep dive into advanced React hooks like useReducer, useCallback, and custom hooks to optimize performance and state management.', status: 'completed', category: 'Frontend', progress: 100 },
-  { id: 2, title: 'Next.js 14 Deep Dive', description: 'Explore the latest features in Next.js 14, including Server Actions, partial pre-rendering, and advanced routing techniques.', status: 'in-progress', category: 'Framework', progress: 45 },
-  { id: 3, title: 'Introduction to Tailwind CSS', description: 'Learn the fundamentals of utility-first CSS with Tailwind, covering setup, configuration, and responsive design.', status: 'not-started', category: 'Styling', progress: 0 },
-  { id: 4, title: 'Mastering TypeScript', description: 'From basic types to advanced concepts like generics, decorators, and mapped types, this course covers everything you need to be proficient in TypeScript.', status: 'not-started', category: 'Language', progress: 0 },
-  { id: 5, title: 'Server Actions in Next.js', description: 'Understand how to use Server Actions for data mutations and form submissions without creating separate API endpoints.', status: 'completed', category: 'Framework', progress: 100 },
+  { 
+    id: 1, 
+    title: 'Advanced React Hooks', 
+    description: 'A deep dive into advanced React hooks like useReducer, useCallback, and custom hooks to optimize performance and state management.', 
+    status: 'completed', 
+    category: 'Frontend', 
+    progress: 100,
+    progressLogs: [
+        { id: 'log-1-1', notes: 'Finished the module on custom hooks. Built a useLocalStorage hook.', date: formatISO(subDays(now, 7), { representation: 'date' }) },
+        { id: 'log-1-2', notes: 'Completed the final assessment with a 95% score.', date: formatISO(subDays(now, 2), { representation: 'date' }) }
+    ]
+  },
+  { 
+    id: 2, 
+    title: 'Next.js 14 Deep Dive', 
+    description: 'Explore the latest features in Next.js 14, including Server Actions, partial pre-rendering, and advanced routing techniques.', 
+    status: 'in-progress', 
+    category: 'Framework', 
+    progress: 45,
+    progressLogs: [
+        { id: 'log-2-1', notes: 'Completed the section on Server Actions. It\'s a powerful feature for forms.', date: formatISO(subDays(now, 1), { representation: 'date' }) },
+    ]
+  },
+  { 
+    id: 3, 
+    title: 'Introduction to Tailwind CSS', 
+    description: 'Learn the fundamentals of utility-first CSS with Tailwind, covering setup, configuration, and responsive design.', 
+    status: 'not-started', 
+    category: 'Styling', 
+    progress: 0,
+    progressLogs: []
+  },
+  { 
+    id: 4, 
+    title: 'Mastering TypeScript', 
+    description: 'From basic types to advanced concepts like generics, decorators, and mapped types, this course covers everything you need to be proficient in TypeScript.', 
+    status: 'not-started', 
+    category: 'Language', 
+    progress: 0,
+    progressLogs: []
+  },
+  { 
+    id: 5, 
+    title: 'Server Actions in Next.js', 
+    description: 'Understand how to use Server Actions for data mutations and form submissions without creating separate API endpoints.', 
+    status: 'completed', 
+    category: 'Framework', 
+    progress: 100,
+    progressLogs: [
+      { id: 'log-5-1', notes: 'This was a great refresher. Solidified my understanding of the topic.', date: formatISO(subDays(now, 10), { representation: 'date' }) }
+    ]
+  },
 ];
     

@@ -74,6 +74,12 @@ export type Employee = {
     type: 'Lead' | 'Core' | 'VA' | 'Coder' | 'Freelancer';
 };
 
+export type TrainingProgressLog = {
+    id: string;
+    notes: string;
+    date: string; // ISO date string
+}
+
 export type TrainingTask = {
     id: number;
     title: string;
@@ -81,4 +87,5 @@ export type TrainingTask = {
     status: 'completed' | 'in-progress' | 'not-started';
     category: string;
     progress: number;
+    progressLogs?: TrainingProgressLog[];
 }
