@@ -72,9 +72,14 @@ export default function AdminEmployeesPage() {
     setIsSheetOpen(true);
   };
   
+  const handleEditClick = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsSheetOpen(true);
+  };
+  
   const handleSaveEmployee = (employeeData: Omit<Employee, 'id' | 'projects' | 'sheetId'>, id?: string) => {
     if (id) {
-        // For now, we only handle adding new employees
+        setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...employeeData } : e));
     } else {
         const newEmployee: Employee = {
             ...employeeData,
@@ -165,7 +170,7 @@ export default function AdminEmployeesPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent>
-                                                <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleEditClick(employee)}>Edit</DropdownMenuItem>
                                                 <DropdownMenuItem>View Details</DropdownMenuItem>
                                                 <DropdownMenuItem 
                                                   className="text-destructive"
