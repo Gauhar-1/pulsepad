@@ -50,12 +50,6 @@ const employeeNavItems = [
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
-const clientNavItems = [
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
-    { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
-];
-
-
 export default function DashboardLayout({
   children,
 }: {
@@ -68,13 +62,8 @@ export default function DashboardLayout({
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
-    } else if (!loading && user?.role === 'client') {
-        // For clients, the main dashboard is the reports page.
-        if (pathname === '/dashboard') {
-            router.replace('/dashboard/reports');
-        }
     }
-  }, [user, loading, router, pathname]);
+  }, [user, loading, router]);
 
   const handleSignOut = () => {
     sessionStorage.removeItem('mockUser');
@@ -89,11 +78,11 @@ export default function DashboardLayout({
     );
   }
 
-  if (!user || user.role === 'admin' || user.role === 'applicant') {
+  if (!user || user.role === 'admin' || user.role === 'applicant' || user.role === 'client') {
     return <>{children}</>;
   }
 
-  const navItems = user.role === 'employee' ? employeeNavItems : clientNavItems;
+  const navItems = employeeNavItems;
 
   return (
     <SidebarProvider>

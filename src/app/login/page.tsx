@@ -35,6 +35,8 @@ export default function LoginPage() {
         const user: UserType = JSON.parse(storedUser);
         if (user.role === 'admin') {
             router.push('/admin/leaderboard');
+        } else if (user.role === 'client') {
+            router.push('/client');
         } else {
             router.push('/dashboard');
         }
@@ -47,6 +49,8 @@ export default function LoginPage() {
         sessionStorage.setItem('mockUser', JSON.stringify(user));
         if (user.role === 'admin') {
             router.push('/admin/leaderboard');
+        } else if (user.role === 'client') {
+            router.push('/client');
         } else {
             router.push('/dashboard');
         }
