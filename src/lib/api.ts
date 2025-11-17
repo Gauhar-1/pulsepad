@@ -1,17 +1,10 @@
-// This file is now deprecated as we are fetching data directly from Firebase in our components.
-// You can remove this file if you wish.
-
 import type { Project, Update, User } from '@/lib/definitions';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { isToday } from 'date-fns';
 
-const user: User = {
-  id: 'user-1',
-  name: 'Alex Doe',
-  email: 'alex.doe@example.com',
-  avatarUrl: PlaceHolderImages.find((p) => p.id === 'user-avatar-1')?.imageUrl || '',
-  role: 'employee',
-};
+const users: User[] = [
+  { id: 'user-employee', name: 'Alex Doe', email: 'alex.doe@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=employee', role: 'employee' },
+  { id: 'user-admin', name: 'Sam Admin', email: 'sam.admin@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=admin', role: 'admin' },
+];
 
 const projects: Project[] = [
   { id: 'proj-1', name: 'QuantumLeap CRM', client: 'Stellar Solutions', status: 'active' },
@@ -25,14 +18,14 @@ let updates: Update[] = [
   {
     id: 'update-1',
     projectId: 'proj-1',
-    userId: 'user-1',
+    userId: 'user-employee',
     content: 'Finished the main dashboard component and integrated the new charting library.',
     createdAt: new Date().toISOString(),
   },
   {
     id: 'update-2',
     projectId: 'proj-3',
-    userId: 'user-1',
+    userId: 'user-employee',
     content: 'Project is on hold pending client feedback on the new designs.',
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -41,9 +34,9 @@ let updates: Update[] = [
 // Simulate API latency
 const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-export async function getUser(): Promise<User> {
+export async function getUser(userId: string): Promise<User | undefined> {
   await delay(50);
-  return user;
+  return users.find(u => u.id === userId);
 }
 
 export async function getActiveProjects(): Promise<Project[]> {
@@ -58,12 +51,16 @@ export async function getTodaysUpdates(): Promise<Update[]> {
 
 export async function saveUpdate(projectId: string, content: string, updateId?: string): Promise<Update> {
   await delay(500);
+  
+  // In a real app, you'd get the user from the session
+  const userId = 'user-employee'; 
+
   if (updateId) {
     // Edit existing update
     const index = updates.findIndex((u) => u.id === updateId);
     if (index !== -1) {
       updates[index].content = content;
-      updates[index].createdAt = new Date().toISOString();
+      updates[index].createdAt = new Date().toISOString(); // Simulate update timestamp
       return updates[index];
     }
   }
@@ -72,7 +69,7 @@ export async function saveUpdate(projectId: string, content: string, updateId?: 
   const newUpdate: Update = {
     id: `update-${Date.now()}`,
     projectId,
-    userId: user.id,
+    userId: userId,
     content,
     createdAt: new Date().toISOString(),
   };

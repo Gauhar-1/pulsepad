@@ -2,51 +2,36 @@
 import { ProjectCard } from '@/components/dashboard/project-card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FileText } from 'lucide-react';
-import { useCollection } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
 import type { Project, Update } from '@/lib/definitions';
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import { getActiveProjects, getTodaysUpdates } from '@/lib/api';
 
 export default function DashboardPage() {
-  const firestore = useFirestore();
-  const { user } = useUser();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [todaysUpdates, setTodaysUpdates] = useState<Update[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const projectsQuery = useMemo(() => {
-    if (!firestore || !user) return null;
-    return query(collection(firestore, 'projects'), where('status', '==', 'active'));
-  }, [firestore, user]);
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const [activeProjects, updates] = await Promise.all([
+        getActiveProjects(),
+        getTodaysUpdates(),
+      ]);
+      setProjects(activeProjects);
+      setTodaysUpdates(updates);
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
 
-  const { data: projects, loading: projectsLoading } = useCollection<Project>(projectsQuery);
+  const projectsWithUpdates = projects.map((project) => {
+    const update = todaysUpdates.find((u) => u.projectId === project.id);
+    return { ...project, todaysUpdate: update };
+  });
 
-  const updatesQuery = useMemo(() => {
-    if (!firestore || !user) return null;
-    // Simple query for all updates for now. Can be optimized.
-    return collection(firestore, 'updates');
-  }, [firestore, user]);
-
-  const { data: allUpdates, loading: updatesLoading } = useCollection<Update>(updatesQuery);
-
-  const projectsWithUpdates = useMemo(() => {
-    if (!projects || !allUpdates) return [];
-    
-    const todaysUpdates = allUpdates.filter(u => {
-        const updateDate = new Date(u.createdAt);
-        const today = new Date();
-        return updateDate.getDate() === today.getDate() &&
-               updateDate.getMonth() === today.getMonth() &&
-               updateDate.getFullYear() === today.getFullYear();
-    });
-
-    return projects.map((project) => {
-      const update = todaysUpdates.find((u) => u.projectId === project.id);
-      return { ...project, todaysUpdate: update };
-    });
-  }, [projects, allUpdates]);
-
-
-  if (projectsLoading || updatesLoading) {
-    return <div>Loading projects...</div>
+  if (loading) {
+    return <div>Loading projects...</div>;
   }
 
   return (
@@ -60,7 +45,7 @@ export default function DashboardPage() {
         </div>
       </div>
       {projectsWithUpdates.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {projectsWithUpdates.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}

@@ -47,7 +47,7 @@ export function ProjectCard({ project }: { project: ProjectWithUpdate }) {
               <div>
                 <p className="font-semibold">Update Submitted</p>
                 <p className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(project.todaysUpdate.createdAt), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(project.todaysUpdate!.createdAt), { addSuffix: true })}
                 </p>
               </div>
             </div>

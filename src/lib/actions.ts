@@ -2,9 +2,7 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { getFirebaseAdmin } from '@/firebase/admin'; // Assuming admin initialization for server actions
-import { getAuth } from 'firebase-admin/auth';
+import { saveUpdate as apiSaveUpdate } from '@/lib/api';
 
 const UpdateSchema = z.object({
   projectId: z.string(),
@@ -20,8 +18,6 @@ export type State = {
 };
 
 export async function submitUpdate(prevState: State, formData: FormData) {
-  const { firestore } = getFirebaseAdmin();
-  
   const validatedFields = UpdateSchema.safeParse({
     projectId: formData.get('projectId'),
     updateId: formData.get('updateId'),
@@ -37,31 +33,12 @@ export async function submitUpdate(prevState: State, formData: FormData) {
   
   const { projectId, content, updateId } = validatedFields.data;
   
-  // This is a placeholder for getting the current user's ID.
-  // In a real app, you'd get this from the session.
-  const userId = 'user-1'; 
-
   try {
-    if (updateId) {
-      const updateRef = doc(firestore, 'updates', updateId);
-      await setDoc(updateRef, { 
-        content,
-        updatedAt: serverTimestamp(),
-       }, { merge: true });
-    } else {
-      const updatesCollection = collection(firestore, 'updates');
-      await addDoc(updatesCollection, {
-        projectId,
-        content,
-        userId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    }
+    await apiSaveUpdate(projectId, content, updateId);
   } catch (error) {
     console.error(error);
     return {
-      message: 'Database Error: Failed to save update.',
+      message: 'API Error: Failed to save update.',
     };
   }
 

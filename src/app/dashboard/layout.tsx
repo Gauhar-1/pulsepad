@@ -4,16 +4,33 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { PanelLeft } from 'lucide-react';
-import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import type { User } from '@/lib/definitions';
+
+// Mock user hook
+const useMockUser = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem('mockUser');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
+
+  return { user, loading };
+};
+
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useUser();
+  const { user, loading } = useMockUser();
   const router = useRouter();
 
   useEffect(() => {

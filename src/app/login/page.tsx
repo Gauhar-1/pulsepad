@@ -3,13 +3,11 @@ import { Shield, User, Briefcase, UserCheck, ArrowRight } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { useFirebaseApp, useFirestore, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import type { User as UserType } from '@/lib/definitions';
 
 const roles = [
   { id: 'employee', name: 'Employee', icon: User },
@@ -18,45 +16,31 @@ const roles = [
   { id: 'applicant', name: 'Applicant', icon: UserCheck },
 ];
 
+const mockUsers: Record<string, UserType> = {
+    employee: { id: 'user-employee', name: 'John Doe', email: 'john.doe@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=employee', role: 'employee' },
+    admin: { id: 'user-admin', name: 'Jane Smith', email: 'jane.smith@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=admin', role: 'admin' },
+    client: { id: 'user-client', name: 'Peter Jones', email: 'peter.jones@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=client', role: 'client' },
+    applicant: { id: 'user-applicant', name: 'Mary Brown', email: 'mary.brown@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=applicant', role: 'applicant' },
+}
+
 export default function LoginPage() {
-  const app = useFirebaseApp();
-  const firestore = useFirestore();
-  const { user, loading } = useUser();
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState('employee');
 
   useEffect(() => {
-    if (!loading && user) {
+    // If a user is already stored, redirect to dashboard
+    if (sessionStorage.getItem('mockUser')) {
       router.push('/dashboard');
     }
-  }, [user, loading, router]);
+  }, [router]);
 
-  const handleSignIn = async () => {
-    if (!app || !firestore) return;
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      if (user) {
-        const userRef = doc(firestore, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            role: selectedRole, // Set role on first sign-in
-          });
-        }
-        // If user exists, their role is already set, we don't update it here.
+  const handleSignIn = () => {
+    const user = mockUsers[selectedRole];
+    if (user) {
+        sessionStorage.setItem('mockUser', JSON.stringify(user));
         router.push('/dashboard');
-      }
-    } catch (error) {
-      console.error('Error signing in with Google', error);
+    } else {
+        console.error('Invalid role selected');
     }
   };
 
@@ -68,7 +52,7 @@ export default function LoginPage() {
             <Logo />
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">Welcome to PulsePad</CardTitle>
-          <CardDescription>Please select your role and sign in.</CardDescription>
+          <CardDescription>Please select your role to sign in.</CardDescription>
         </CardHeader>
         <CardContent>
           <RadioGroup defaultValue="employee" className="grid grid-cols-2 gap-4" onValueChange={setSelectedRole}>
@@ -86,7 +70,7 @@ export default function LoginPage() {
             ))}
           </RadioGroup>
           <Button className="mt-6 w-full" onClick={handleSignIn}>
-            Sign In with Google <ArrowRight className="ml-2 h-4 w-4" />
+            Sign In <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </CardContent>
       </Card>

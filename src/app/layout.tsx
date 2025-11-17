@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export const metadata: Metadata = {
   title: 'PulsePad',
@@ -26,11 +24,8 @@ export default function RootLayout({
         />
       </head>
       <body className={cn('font-body antialiased', 'min-h-screen bg-background')}>
-        <FirebaseClientProvider>
-          {children}
-          <Toaster />
-          <FirebaseErrorListener />
-        </FirebaseClientProvider>
+        {children}
+        <Toaster />
       </body>
     </html>
   );
