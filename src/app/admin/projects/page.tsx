@@ -44,7 +44,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { CreateProjectSheet } from '@/components/admin/create-project-sheet';
-import { ViewProjectDialog } from '@/components/admin/view-project-dialog';
 import { mockProjectData, mockEmployeeData } from '@/lib/mock-data';
 import {
   Select,
@@ -53,6 +52,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useRouter } from 'next/navigation';
 
 const filterOptions = [
     { value: 'all', label: 'All Projects' },
@@ -67,12 +67,12 @@ const filterOptions = [
 export default function AdminProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<ProjectSheetItem[]>(mockProjectData);
-  const [employees, setEmployees] = useState<Employee[]>(mockEmployeeData);
+  const [employees] = useState<Employee[]>(mockEmployeeData);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectSheetItem | null>(null);
   const [activeTab, setActiveTab] = useState('all');
+  const router = useRouter();
 
   
   const filteredProjects = useMemo(() => {
@@ -138,8 +138,7 @@ export default function AdminProjectsPage() {
   };
 
   const handleViewClick = (project: ProjectSheetItem) => {
-    setSelectedProject(project);
-    setIsViewDialogOpen(true);
+    router.push(`/admin/projects/${project.id}`);
   }
 
   const handleDeleteClick = (project: ProjectSheetItem) => {
@@ -310,12 +309,6 @@ export default function AdminProjectsPage() {
         freelancers={activeFreelancers}
         coders={activeCoders}
         coreEmployees={activeCoreEmployees}
-      />
-
-      <ViewProjectDialog
-        open={isViewDialogOpen}
-        onOpenChange={setIsViewDialogOpen}
-        project={selectedProject}
       />
     </div>
   );
