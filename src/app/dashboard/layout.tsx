@@ -44,9 +44,14 @@ export default function DashboardLayout({
     router.push('/login');
   };
   
-  if (loading || !user) {
+  if (loading) {
     // You can show a loading spinner here
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+  
+  if (!user || user.role === 'admin') {
+      // Don't render layout for admin, as it has its own layout/pages
+      return <>{children}</>;
   }
   
   return (
@@ -54,11 +59,6 @@ export default function DashboardLayout({
         <header className="sticky top-0 z-10 flex h-[57px] items-center justify-between border-b bg-background px-4">
             <Logo />
             <div className="flex items-center gap-4">
-              {user?.role === 'admin' && (
-                <Button asChild variant="ghost">
-                  <Link href="/admin/leaderboard">Admin Leaderboard</Link>
-                </Button>
-              )}
               <Button variant="ghost" size="icon" onClick={handleSignOut}>
                   <LogOut className="h-5 w-5" />
               </Button>
