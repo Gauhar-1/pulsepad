@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import type { ProjectSheetItem, Employee, Update } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +60,50 @@ const DetailItem = ({
 interface UpdateWithAuthor extends Update {
     authorName: string;
     authorAvatar: string;
+}
+
+const fetchProjectData = async (id: string) => {
+    const [projectRes, employeesRes, updatesRes] = await Promise.all([
+        fetch(`/api/admin/projects?id=${id}`),
+        fetch('/api/admin/employees'),
+        fetch('/api/admin/updates')
+    ]);
+
+    if (!projectRes.ok) {
+        throw new Error('Project not found');
+    }
+
+    const foundProject: ProjectSheetItem = await projectRes.json();
+    const allEmployees: Employee[] = await employeesRes.json();
+    const allUpdates: Update[] = await updatesRes.json();
+
+    const assignedTeam = [
+        foundProject.leadAssignee,
+        foundProject.projectLeader,
+        foundProject.virtualAssistant,
+        ...(foundProject.coders || []),
+        ...(foundProject.freelancers || []),
+    ].filter((name): name is string => !!name);
+
+    const uniqueTeamNames = [...new Set(assignedTeam)];
+
+    const teamMembers = allEmployees.filter((e: Employee) =>
+        uniqueTeamNames.includes(e.name)
+    );
+    
+    const projectUpdates = allUpdates
+        .filter((u: Update) => u.projectId === id)
+        .map((u: Update) => {
+            const author = allEmployees.find((e: Employee) => `user-${e.id.split('-')[1]}` === u.userId);
+            return {
+                ...u,
+                authorName: author?.name || 'Unknown User',
+                authorAvatar: `https://i.pravatar.cc/150?u=${author?.id}`
+            }
+        })
+        .sort((a: Update, b: Update) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return { project: foundProject, team: teamMembers, updates: projectUpdates };
 }
 
 const ProjectDetailSkeleton = () => (
@@ -137,66 +181,20 @@ const ProjectDetailSkeleton = () => (
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
-  const [project, setProject] = useState<ProjectSheetItem | null>(null);
-  const [team, setTeam] = useState<Employee[]>([]);
-  const [updates, setUpdates] = useState<UpdateWithAuthor[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['project', id],
+    queryFn: () => fetchProjectData(id as string),
+    enabled: !!id,
+  });
 
-  useEffect(() => {
-    if (!id) return;
-    async function fetchProjectData() {
-      setLoading(true);
-      const [projectRes, employeesRes, updatesRes] = await Promise.all([
-        fetch(`/api/admin/projects?id=${id}`),
-        fetch('/api/admin/employees'),
-        fetch('/api/admin/updates')
-      ]);
+  const { project, team, updates } = data || {};
 
-      const foundProject = await projectRes.json();
-      const allEmployees = await employeesRes.json();
-      const allUpdates = await updatesRes.json();
-
-      if (foundProject) {
-        setProject(foundProject);
-
-        const assignedTeam = [
-          foundProject.leadAssignee,
-          foundProject.projectLeader,
-          foundProject.virtualAssistant,
-          ...(foundProject.coders || []),
-          ...(foundProject.freelancers || []),
-        ].filter((name): name is string => !!name);
-
-        const uniqueTeamNames = [...new Set(assignedTeam)];
-
-        const teamMembers = allEmployees.filter((e: Employee) =>
-          uniqueTeamNames.includes(e.name)
-        );
-        setTeam(teamMembers);
-        
-        const projectUpdates = allUpdates
-            .filter((u: Update) => u.projectId === id)
-            .map((u: Update) => {
-                const author = allEmployees.find((e: Employee) => `user-${e.id.split('-')[1]}` === u.userId);
-                return {
-                    ...u,
-                    authorName: author?.name || 'Unknown User',
-                    authorAvatar: `https://i.pravatar.cc/150?u=${author?.id}`
-                }
-            })
-            .sort((a: Update, b: Update) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setUpdates(projectUpdates);
-      }
-      setLoading(false);
-    }
-    fetchProjectData();
-  }, [id]);
-
-  if (loading) {
+  if (isLoading) {
     return <ProjectDetailSkeleton />;
   }
 
-  if (!project) {
+  if (isError || !project) {
     return notFound();
   }
 
@@ -262,7 +260,7 @@ export default function ProjectDetailPage() {
                 <CardContent>
                    <div className="relative pl-6">
                         <div className="absolute left-[22px] top-0 h-full w-0.5 bg-border -translate-x-1/2"></div>
-                        {updates.length > 0 ? updates.map((item) => (
+                        {updates && updates.length > 0 ? updates.map((item) => (
                            <div key={item.id} className="mb-8 flex items-start gap-4">
                                <Avatar className="z-10 h-10 w-10 border-2 border-primary">
                                     <AvatarImage src={item.authorAvatar} />
@@ -328,7 +326,7 @@ export default function ProjectDetailPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-4">
-                {team.map(member => (
+                {team && team.map(member => (
                     <li key={member.id} className="flex items-center gap-3">
                         <Avatar className="h-9 w-9">
                             <AvatarImage src={`https://i.pravatar.cc/150?u=${member.id}`} />
@@ -372,7 +370,3 @@ const LinkItem = ({ href, icon: Icon, label }: { href: string, icon: React.Eleme
         </Link>
     </Button>
 )
-
-    
-
-    

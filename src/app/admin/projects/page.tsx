@@ -26,7 +26,7 @@ import {
   Filter,
 } from 'lucide-react';
 import type { Employee, ProjectSheetItem } from '@/lib/definitions';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,6 +53,18 @@ import {
 } from '@/components/ui/select';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+const fetchProjects = async (): Promise<ProjectSheetItem[]> => {
+    const res = await fetch('/api/admin/projects');
+    if (!res.ok) throw new Error('Failed to fetch projects');
+    return res.json();
+}
+const fetchEmployees = async (): Promise<Employee[]> => {
+    const res = await fetch('/api/admin/employees');
+    if (!res.ok) throw new Error('Failed to fetch employees');
+    return res.json();
+}
 
 const filterOptions = [
     { value: 'all', label: 'All Projects' },
@@ -96,29 +108,54 @@ const TableSkeleton = ({rows = 5}: {rows?: number}) => (
 )
 
 export default function AdminProjectsPage() {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [projects, setProjects] = useState<ProjectSheetItem[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectSheetItem | null>(null);
   const [activeTab, setActiveTab] = useState('all');
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    async function fetchData() {
-        setLoading(true);
-        const [projRes, empRes] = await Promise.all([
-            fetch('/api/admin/projects'),
-            fetch('/api/admin/employees')
-        ]);
-        setProjects(await projRes.json());
-        setEmployees(await empRes.json());
-        setLoading(false);
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery<ProjectSheetItem[]>({
+    queryKey: ['projects'],
+    queryFn: fetchProjects
+  });
+  
+  const { data: employees = [], isLoading: isLoadingEmployees } = useQuery<Employee[]>({
+    queryKey: ['employees'],
+    queryFn: fetchEmployees
+  });
+
+  const saveProjectMutation = useMutation({
+    mutationFn: async ({ projectData, id }: { projectData: Omit<ProjectSheetItem, 'id'>, id?: string }) => {
+      // In a real app, this would be a POST/PUT to your API
+      // For now, we'll mimic the behavior optimistically
+      const currentProjects = queryClient.getQueryData<ProjectSheetItem[]>(['projects']) || [];
+      if (id) {
+        return currentProjects.map(p => p.id === id ? { ...p, ...projectData, id } : p);
+      } else {
+        const newProject = { ...projectData, id: `proj-${Date.now()}` };
+        return [newProject, ...currentProjects];
+      }
+    },
+    onSuccess: (updatedData) => {
+      queryClient.setQueryData(['projects'], updatedData);
+      setIsSheetOpen(false);
     }
-    fetchData();
-  }, []);
+  });
+
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      const currentProjects = queryClient.getQueryData<ProjectSheetItem[]>(['projects']) || [];
+      return currentProjects.filter(p => p.id !== projectId);
+    },
+    onSuccess: (updatedData) => {
+      queryClient.setQueryData(['projects'], updatedData);
+      setIsDeleteDialogOpen(false);
+      setSelectedProject(null);
+    }
+  });
+
   
   const filteredProjects = useMemo(() => {
     const searchFiltered = projects.filter(p => 
@@ -152,25 +189,11 @@ export default function AdminProjectsPage() {
 
   }, [projects, searchQuery, activeTab]);
 
-  const activeLeads = useMemo(() => {
-    return employees.filter(e => e.active && e.type === 'Lead');
-  }, [employees]);
-
-  const activeVAs = useMemo(() => {
-    return employees.filter(e => e.active && e.type === 'VA');
-  }, [employees]);
-
-  const activeFreelancers = useMemo(() => {
-    return employees.filter(e => e.active && e.type === 'Freelancer');
-  }, [employees]);
-  
-  const activeCoders = useMemo(() => {
-    return employees.filter(e => e.active && e.type === 'Coder');
-  }, [employees]);
-
-  const activeCoreEmployees = useMemo(() => {
-    return employees.filter(e => e.active && e.type === 'Core');
-  }, [employees]);
+  const activeLeads = useMemo(() => employees.filter(e => e.active && e.type === 'Lead'), [employees]);
+  const activeVAs = useMemo(() => employees.filter(e => e.active && e.type === 'VA'), [employees]);
+  const activeFreelancers = useMemo(() => employees.filter(e => e.active && e.type === 'Freelancer'), [employees]);
+  const activeCoders = useMemo(() => employees.filter(e => e.active && e.type === 'Coder'), [employees]);
+  const activeCoreEmployees = useMemo(() => employees.filter(e => e.active && e.type === 'Core'), [employees]);
 
   const handleCreateClick = () => {
     setSelectedProject(null);
@@ -193,21 +216,12 @@ export default function AdminProjectsPage() {
 
   const handleDeleteConfirm = () => {
     if (selectedProject) {
-      setProjects(projects.filter(p => p.id !== selectedProject.id));
-      setIsDeleteDialogOpen(false);
-      setSelectedProject(null);
+      deleteProjectMutation.mutate(selectedProject.id);
     }
   };
 
   const handleSaveProject = (projectData: Omit<ProjectSheetItem, 'id' | 'tags'> & { tags: string[] }, id?: string) => {
-    if (id) {
-        // Update existing project
-        setProjects(prev => prev.map(p => p.id === id ? { ...p, ...projectData, id } : p));
-    } else {
-        // Add new project
-        const projectWithId = { ...projectData, id: `proj-${Date.now()}` };
-        setProjects(prev => [projectWithId, ...prev]);
-    }
+    saveProjectMutation.mutate({ projectData: projectData as Omit<ProjectSheetItem, 'id'>, id });
   };
 
 
@@ -262,7 +276,7 @@ export default function AdminProjectsPage() {
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
-                    {loading ? <TableSkeleton /> : (
+                    {isLoadingProjects || isLoadingEmployees ? <TableSkeleton /> : (
                         <Table>
                             <TableHeader>
                                 <TableRow>

@@ -25,7 +25,7 @@ import {
   MoreVertical,
 } from 'lucide-react';
 import type { Employee } from '@/lib/definitions';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +45,16 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+
+const fetchEmployees = async (): Promise<Employee[]> => {
+    const res = await fetch('/api/admin/employees');
+    if (!res.ok) {
+        throw new Error('Failed to fetch employees');
+    }
+    return res.json();
+}
 
 const TableSkeleton = ({rows = 5}: {rows?: number}) => (
     <Table>
@@ -76,24 +85,56 @@ const TableSkeleton = ({rows = 5}: {rows?: number}) => (
 )
 
 export default function AdminEmployeesPage() {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    async function fetchEmployees() {
-      setLoading(true);
-      const res = await fetch('/api/admin/employees');
-      const data = await res.json();
-      setEmployees(data);
-      setLoading(false);
+  const { data: employees = [], isLoading } = useQuery<Employee[]>({
+    queryKey: ['employees'],
+    queryFn: fetchEmployees
+  });
+
+  // In a real app, this would be a mutation to the backend
+  const deactivateMutation = useMutation({
+    mutationFn: async (employeeId: string) => {
+        // Find the employee and update their status locally.
+        // In a real app, you'd send a request to your API.
+        const updatedEmployees = employees.map(e => e.id === employeeId ? { ...e, active: false } : e);
+        return updatedEmployees;
+    },
+    onSuccess: (updatedData) => {
+        queryClient.setQueryData(['employees'], updatedData);
+        setIsDeactivateDialogOpen(false);
+        setSelectedEmployee(null);
     }
-    fetchEmployees();
-  }, []);
+  });
+
+  const saveEmployeeMutation = useMutation({
+     mutationFn: async ({ employeeData, id }: { employeeData: Omit<Employee, 'id' | 'projects' | 'sheetId'>, id?: string }) => {
+        // This is optimistic update. In real app, you would post to API.
+        let updatedEmployees: Employee[];
+        if (id) {
+            updatedEmployees = employees.map(e => e.id === id ? { ...e, ...employeeData } : e);
+        } else {
+            const newEmployee: Employee = {
+                ...employeeData,
+                id: `emp-${Date.now()}`,
+                projects: [],
+                sheetId: `sheet-${Date.now()}`
+            };
+            updatedEmployees = [newEmployee, ...employees];
+        }
+        return updatedEmployees;
+    },
+    onSuccess: (updatedData) => {
+        queryClient.setQueryData(['employees'], updatedData);
+        setIsSheetOpen(false);
+    }
+  });
+
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(e => 
@@ -124,24 +165,12 @@ export default function AdminEmployeesPage() {
 
   const handleDeactivateConfirm = () => {
     if (selectedEmployee) {
-      setEmployees(prev => prev.map(e => e.id === selectedEmployee.id ? { ...e, active: false } : e));
-      setIsDeactivateDialogOpen(false);
-      setSelectedEmployee(null);
+      deactivateMutation.mutate(selectedEmployee.id);
     }
   };
   
   const handleSaveEmployee = (employeeData: Omit<Employee, 'id' | 'projects' | 'sheetId'>, id?: string) => {
-    if (id) {
-        setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...employeeData } : e));
-    } else {
-        const newEmployee: Employee = {
-            ...employeeData,
-            id: `emp-${Date.now()}`,
-            projects: [],
-            sheetId: `sheet-${Date.now()}`
-        };
-        setEmployees(prev => [newEmployee, ...prev]);
-    }
+    saveEmployeeMutation.mutate({ employeeData, id });
   };
 
 
@@ -183,7 +212,7 @@ export default function AdminEmployeesPage() {
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
-                    {loading ? <TableSkeleton /> : (
+                    {isLoading ? <TableSkeleton /> : (
                         <Table>
                             <TableHeader>
                                 <TableRow>

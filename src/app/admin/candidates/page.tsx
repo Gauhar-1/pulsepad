@@ -32,14 +32,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useQuery } from '@tanstack/react-query';
 
-const mockCandidates = [
-  { id: 'cand-001', name: 'John Doe', email: 'john.doe@email.com', role: 'React Developer', status: 'Interviewing', avatarUrl: 'https://i.pravatar.cc/150?u=cand001' },
-  { id: 'cand-002', name: 'Emily White', email: 'emily.white@email.com', role: 'Project Manager', status: 'New', avatarUrl: 'https://i.pravatar.cc/150?u=cand002' },
-  { id: 'cand-003', name: 'Michael Black', email: 'michael.black@email.com', role: 'UX/UI Designer', status: 'Hired', avatarUrl: 'https://i.pravatar.cc/150?u=cand003' },
-  { id: 'cand-004', name: 'Sarah Green', email: 'sarah.green@email.com', role: 'Node.js Developer', status: 'Rejected', avatarUrl: 'https://i.pravatar.cc/150?u=cand004' },
-  { id: 'cand-005', name: 'David Blue', email: 'david.blue@email.com', role: 'DevOps Engineer', status: 'New', avatarUrl: 'https://i.pravatar.cc/150?u=cand005' },
-];
+type Candidate = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: 'Interviewing' | 'New' | 'Hired' | 'Rejected';
+  avatarUrl: string;
+};
+
+const fetchCandidates = async (): Promise<Candidate[]> => {
+    const res = await fetch('/api/admin/candidates');
+    if (!res.ok) {
+        throw new Error('Failed to fetch candidates');
+    }
+    return res.json();
+};
 
 const statusFilters = ['All', 'New', 'Interviewing', 'Hired', 'Rejected'];
 
@@ -47,15 +57,20 @@ export default function AdminCandidatesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   
+  const { data: candidates = [] } = useQuery<Candidate[]>({
+    queryKey: ['candidates'],
+    queryFn: fetchCandidates,
+  });
+
   const filteredCandidates = useMemo(() => {
-    return mockCandidates.filter(c => {
+    return candidates.filter(c => {
       const searchMatch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           c.role.toLowerCase().includes(searchQuery.toLowerCase());
       const statusMatch = statusFilter === 'All' || c.status === statusFilter;
       return searchMatch && statusMatch;
     });
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, candidates]);
 
   const exportToCSV = () => {
     const headers = ['Name', 'Email', 'Role', 'Status'];
@@ -89,7 +104,7 @@ export default function AdminCandidatesPage() {
              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <CardTitle>All Candidates</CardTitle>
-                    <CardDescription>{filteredCandidates.length} of {mockCandidates.length} candidates shown.</CardDescription>
+                    <CardDescription>{filteredCandidates.length} of {candidates.length} candidates shown.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="relative w-full md:max-w-sm">

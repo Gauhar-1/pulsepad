@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import type { Employee, Update, ProjectSheetItem, TrainingTask } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery } from '@tanstack/react-query';
 
 const DetailItem = ({
   icon: Icon,
@@ -51,6 +52,56 @@ interface UpdateWithProject extends Update {
 
 interface AssignedTraining extends TrainingTask {
     trainerName: string;
+}
+
+const fetchEmployeeData = async (id: string) => {
+    const [employeeRes, projectsRes, trainingsRes, updatesRes, allEmployeesRes] = await Promise.all([
+        fetch(`/api/admin/employees?id=${id}`),
+        fetch('/api/admin/projects'),
+        fetch('/api/admin/training'),
+        fetch('/api/admin/updates'),
+        fetch('/api/admin/employees'),
+    ]);
+
+    if (!employeeRes.ok) {
+      throw new Error('Employee not found');
+    }
+
+    const foundEmployee: Employee = await employeeRes.json();
+    const allProjects: ProjectSheetItem[] = await projectsRes.json();
+    const allTrainings: TrainingTask[] = await trainingsRes.json();
+    const allUpdates: Update[] = await updatesRes.json();
+    const allEmployees: Employee[] = await allEmployeesRes.json();
+    
+    const assignedProjects = allProjects.filter(p => foundEmployee.projects.includes(p.projectTitle));
+
+    const assignedTrainings = allTrainings
+        .filter(task => task.assignedTo.includes(foundEmployee.id))
+        .map(task => {
+            const trainer = allEmployees.find(e => e.id === task.trainerId);
+            return {
+                ...task,
+                trainerName: trainer?.name || 'N/A'
+            }
+        });
+
+    const employeeUpdates = allUpdates
+        .filter(u => u.userId === `user-${(id as string).split('-')[1]}`)
+        .map(u => {
+            const project = allProjects.find(p => p.id === u.projectId);
+            return {
+                ...u,
+                projectName: project?.projectTitle || 'Unknown Project'
+            }
+        })
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return {
+      employee: foundEmployee,
+      projects: assignedProjects,
+      trainings: assignedTrainings,
+      updates: employeeUpdates,
+    }
 }
 
 const EmployeeDetailSkeleton = () => (
@@ -115,75 +166,25 @@ const EmployeeDetailSkeleton = () => (
 
 export default function EmployeeDetailPage() {
   const { id } = useParams();
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [updates, setUpdates] = useState<UpdateWithProject[]>([]);
-  const [projects, setProjects] = useState<ProjectSheetItem[]>([]);
-  const [assignedTrainings, setAssignedTrainings] = useState<AssignedTraining[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['employee', id],
+    queryFn: () => fetchEmployeeData(id as string),
+    enabled: !!id,
+  });
 
-  useEffect(() => {
-    if (!id) return;
-    
-    async function fetchData() {
-        setLoading(true);
-        const [employeeRes, projectsRes, trainingsRes, updatesRes, allEmployeesRes] = await Promise.all([
-            fetch(`/api/admin/employees?id=${id}`),
-            fetch('/api/admin/projects'),
-            fetch('/api/admin/training'),
-            fetch('/api/admin/updates'),
-            fetch('/api/admin/employees'),
-        ]);
-
-        const foundEmployee: Employee = await employeeRes.json();
-        const allProjects: ProjectSheetItem[] = await projectsRes.json();
-        const allTrainings: TrainingTask[] = await trainingsRes.json();
-        const allUpdates: Update[] = await updatesRes.json();
-        const allEmployees: Employee[] = await allEmployeesRes.json();
-        
-        if (foundEmployee) {
-            setEmployee(foundEmployee);
-            setProjects(allProjects.filter(p => foundEmployee.projects.includes(p.projectTitle)));
-
-            const trainings = allTrainings
-                .filter(task => task.assignedTo.includes(foundEmployee.id))
-                .map(task => {
-                    const trainer = allEmployees.find(e => e.id === task.trainerId);
-                    return {
-                        ...task,
-                        trainerName: trainer?.name || 'N/A'
-                    }
-                });
-            setAssignedTrainings(trainings);
-
-            const employeeUpdates = allUpdates
-                .filter(u => u.userId === `user-${(id as string).split('-')[1]}`)
-                .map(u => {
-                    const project = allProjects.find(p => p.id === u.projectId);
-                    return {
-                        ...u,
-                        projectName: project?.projectTitle || 'Unknown Project'
-                    }
-                })
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            setUpdates(employeeUpdates);
-        }
-        setLoading(false);
-    }
-    
-    fetchData();
-
-  }, [id]);
+  const { employee, projects, trainings: assignedTrainings, updates } = data || {};
 
   const memoizedProjects = useMemo(() => {
     if (!employee) return [];
     return projects;
   }, [employee, projects]);
 
-  if (loading) {
+  if (isLoading) {
     return <EmployeeDetailSkeleton />;
   }
 
-  if (!employee) {
+  if (isError || !employee) {
     return notFound();
   }
 
@@ -216,7 +217,7 @@ export default function EmployeeDetailPage() {
                 <CardContent>
                     <div className="relative pl-6">
                         <div className="absolute left-6 top-0 h-full w-0.5 bg-border"></div>
-                        {updates.length > 0 ? updates.map((item, index) => (
+                        {updates && updates.length > 0 ? updates.map((item, index) => (
                            <div key={index} className="mb-8 flex items-start gap-4">
                                 <div className="z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background border-2 border-primary">
                                     <MessageSquare className="h-4 w-4 text-primary"/>
@@ -269,7 +270,7 @@ export default function EmployeeDetailPage() {
               <CardTitle>Assigned Projects</CardTitle>
             </CardHeader>
             <CardContent>
-              {memoizedProjects.length > 0 ? (
+              {memoizedProjects && memoizedProjects.length > 0 ? (
                 <ul className="space-y-2">
                     {memoizedProjects.map(project => (
                         <li key={project.id}>
@@ -289,7 +290,7 @@ export default function EmployeeDetailPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {assignedTrainings.length > 0 ? (
+                  {assignedTrainings && assignedTrainings.length > 0 ? (
                     <ul className="space-y-4">
                       {assignedTrainings.map(training => (
                         <li key={training.id} className="text-sm">

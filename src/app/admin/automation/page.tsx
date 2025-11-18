@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -37,6 +37,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 import type { ProjectSheetItem } from '@/lib/definitions';
+import { useQuery } from '@tanstack/react-query';
 
 const mockCandidates = [
   { id: 'cand-001', name: 'John Doe', email: 'john.doe@email.com', role: 'React Developer' },
@@ -56,20 +57,24 @@ const communicationChannels = [
     { value: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
 ];
 
+const fetchProjects = async (): Promise<ProjectSheetItem[]> => {
+    const res = await fetch('/api/admin/projects');
+    if (!res.ok) {
+        throw new Error('Failed to fetch projects');
+    }
+    return res.json();
+};
+
+
 export default function AdminAutomationPage() {
   const { toast } = useToast();
-  const [projects, setProjects] = useState<ProjectSheetItem[]>([]);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
-
-  useEffect(() => {
-    async function fetchProjects() {
-      const res = await fetch('/api/admin/projects');
-      const data = await res.json();
-      setProjects(data);
-    }
-    fetchProjects();
-  }, []);
+  
+  const { data: projects = [] } = useQuery<ProjectSheetItem[]>({
+    queryKey: ['projects'],
+    queryFn: fetchProjects
+  });
 
   const handleQueueCommunications = (type: 'project' | 'candidate') => {
     toast({

@@ -1,6 +1,6 @@
 
 'use client';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -16,6 +16,19 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Employee, TrainingTask } from '@/lib/definitions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery } from '@tanstack/react-query';
+
+const fetchTrainings = async (): Promise<TrainingTask[]> => {
+    const res = await fetch('/api/admin/training');
+    if (!res.ok) throw new Error('Failed to fetch trainings');
+    return res.json();
+}
+const fetchEmployees = async (): Promise<Employee[]> => {
+    const res = await fetch('/api/admin/employees');
+    if (!res.ok) throw new Error('Failed to fetch employees');
+    return res.json();
+}
+
 
 const TrainingCardSkeleton = () => (
     <Card className="flex flex-col">
@@ -41,46 +54,45 @@ const TrainingCardSkeleton = () => (
 )
 
 export default function AdminTrainingPage() {
-  const [trainingAssignments, setTrainingAssignments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: trainingTasks, isLoading: isLoadingTrainings } = useQuery<TrainingTask[]>({
+    queryKey: ['trainingTasks'],
+    queryFn: fetchTrainings,
+  });
 
-  useEffect(() => {
-    async function fetchData() {
-        setLoading(true);
-        const [trainingsRes, employeesRes] = await Promise.all([
-            fetch('/api/admin/training'),
-            fetch('/api/admin/employees')
-        ]);
-        const mockTrainingTasks: TrainingTask[] = await trainingsRes.json();
-        const mockEmployeeData: Employee[] = await employeesRes.json();
+  const { data: employees, isLoading: isLoadingEmployees } = useQuery<Employee[]>({
+    queryKey: ['employees'],
+    queryFn: fetchEmployees,
+  });
 
-        const assignments: any[] = [];
-        mockTrainingTasks.forEach(task => {
-        const trainer = mockEmployeeData.find(e => e.id === task.trainerId);
+  const trainingAssignments = useMemo(() => {
+    if (!trainingTasks || !employees) return [];
+    
+    const assignments: any[] = [];
+    trainingTasks.forEach(task => {
+        const trainer = employees.find(e => e.id === task.trainerId);
         task.assignedTo.forEach(employeeId => {
-            const employee = mockEmployeeData.find(e => e.id === employeeId);
+            const employee = employees.find(e => e.id === employeeId);
             if (employee) {
-            assignments.push({
-                employee: {
-                id: employee.id,
-                name: employee.name,
-                avatarUrl: `https://i.pravatar.cc/150?u=${employee.id}`,
-                },
-                task: {
-                title: task.title,
-                category: task.category,
-                status: task.status
-                },
-                trainer: trainer
-            });
+                assignments.push({
+                    employee: {
+                        id: employee.id,
+                        name: employee.name,
+                        avatarUrl: `https://i.pravatar.cc/150?u=${employee.id}`,
+                    },
+                    task: {
+                        title: task.title,
+                        category: task.category,
+                        status: task.status
+                    },
+                    trainer: trainer
+                });
             }
         });
-        });
-        setTrainingAssignments(assignments);
-        setLoading(false);
-    }
-    fetchData();
-  }, []);
+    });
+    return assignments;
+  }, [trainingTasks, employees]);
+
+  const isLoading = isLoadingTrainings || isLoadingEmployees;
 
   return (
     <div className="admin-dashboard-gradient min-h-screen p-4 sm:p-8">
@@ -102,7 +114,7 @@ export default function AdminTrainingPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {loading ? (
+              {isLoading ? (
                 Array.from({length: 6}).map((_, i) => <TrainingCardSkeleton key={i} />)
               ) : (
                 trainingAssignments.map((assignment, index) => (

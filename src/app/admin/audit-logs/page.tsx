@@ -17,8 +17,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
-import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery } from '@tanstack/react-query';
 
 const iconMap = {
     Edit3,
@@ -40,6 +40,14 @@ type AuditLog = {
     icon: keyof typeof iconMap;
 }
 
+const fetchAuditLogs = async (): Promise<AuditLog[]> => {
+    const res = await fetch('/api/admin/audit-logs');
+    if (!res.ok) {
+        throw new Error('Failed to fetch audit logs');
+    }
+    return res.json();
+};
+
 const AuditLogSkeleton = () => (
     <div className="relative pl-6">
         <div className="absolute left-[22px] top-0 h-full w-0.5 bg-border -translate-x-1/2"></div>
@@ -57,19 +65,10 @@ const AuditLogSkeleton = () => (
 
 
 export default function AdminAuditLogsPage() {
-    const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        async function fetchAuditLogs() {
-            setLoading(true);
-            const res = await fetch('/api/admin/audit-logs');
-            const data = await res.json();
-            setAuditLogs(data);
-            setLoading(false);
-        }
-        fetchAuditLogs();
-    }, []);
+    const { data: auditLogs, isLoading } = useQuery<AuditLog[]>({
+        queryKey: ['audit-logs'],
+        queryFn: fetchAuditLogs,
+    });
 
     return (
         <div className="admin-dashboard-gradient min-h-screen p-4 sm:p-8">
@@ -88,11 +87,11 @@ export default function AdminAuditLogsPage() {
                     <CardHeader>
                         <CardTitle>Recent Activities</CardTitle>
                         <CardDescription>
-                            {loading ? 'Loading recent events...' : `Showing the last ${auditLogs.length} recorded events.`}
+                            {isLoading ? 'Loading recent events...' : `Showing the last ${auditLogs?.length || 0} recorded events.`}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {loading ? <AuditLogSkeleton /> : (
+                        {isLoading || !auditLogs ? <AuditLogSkeleton /> : (
                            <div className="relative pl-6">
                                 <div className="absolute left-[22px] top-0 h-full w-0.5 bg-border -translate-x-1/2"></div>
                                 {auditLogs.map(log => {
