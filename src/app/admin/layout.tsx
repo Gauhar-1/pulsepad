@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from '@/components/ui/button';
 import { useRouter, usePathname } from 'next/navigation';
@@ -121,7 +122,7 @@ export default function AdminLayout({
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <header className="sticky top-0 z-10 flex h-[57px] items-center justify-between border-b bg-background px-4 md:hidden">
+          <header className="sticky top-0 z-20 flex h-[57px] items-center justify-between border-b bg-background px-4 md:hidden">
             <Logo />
             <SidebarTrigger />
           </header>
