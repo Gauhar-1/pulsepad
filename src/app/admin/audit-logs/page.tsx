@@ -17,6 +17,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
+import { useEffect, useState } from 'react';
+import type { Update } from '@/lib/definitions';
 
 const mockAuditLogs = [
     {

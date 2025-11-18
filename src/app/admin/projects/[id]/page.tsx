@@ -3,7 +3,6 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { mockProjectData, mockEmployeeData } from '@/lib/mock-data';
 import type { ProjectSheetItem, Employee, Update } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +29,6 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getAllUpdates } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 const DetailItem = ({
@@ -71,44 +69,51 @@ export default function ProjectDetailPage() {
   const [updates, setUpdates] = useState<UpdateWithAuthor[]>([]);
 
   useEffect(() => {
-    const foundProject = mockProjectData.find((p) => p.id === id);
-    if (foundProject) {
-      setProject(foundProject);
+    if (!id) return;
+    async function fetchProjectData() {
+      const [projectRes, employeesRes, updatesRes] = await Promise.all([
+        fetch(`/api/admin/projects?id=${id}`),
+        fetch('/api/admin/employees'),
+        fetch('/api/admin/updates')
+      ]);
 
-      const assignedTeam = [
-        foundProject.leadAssignee,
-        foundProject.projectLeader,
-        foundProject.virtualAssistant,
-        ...(foundProject.coders || []),
-        ...(foundProject.freelancers || []),
-      ].filter((name): name is string => !!name);
+      const foundProject = await projectRes.json();
+      const allEmployees = await employeesRes.json();
+      const allUpdates = await updatesRes.json();
 
-      const uniqueTeamNames = [...new Set(assignedTeam)];
+      if (foundProject) {
+        setProject(foundProject);
 
-      const teamMembers = mockEmployeeData.filter((e) =>
-        uniqueTeamNames.includes(e.name)
-      );
-      setTeam(teamMembers);
-    }
-     async function fetchUpdates() {
-        const allUpdates = await getAllUpdates();
+        const assignedTeam = [
+          foundProject.leadAssignee,
+          foundProject.projectLeader,
+          foundProject.virtualAssistant,
+          ...(foundProject.coders || []),
+          ...(foundProject.freelancers || []),
+        ].filter((name): name is string => !!name);
+
+        const uniqueTeamNames = [...new Set(assignedTeam)];
+
+        const teamMembers = allEmployees.filter((e: Employee) =>
+          uniqueTeamNames.includes(e.name)
+        );
+        setTeam(teamMembers);
+        
         const projectUpdates = allUpdates
-            .filter(u => u.projectId === id)
-            .map(u => {
-                const author = mockEmployeeData.find(e => `user-${e.id.split('-')[1]}` === u.userId);
+            .filter((u: Update) => u.projectId === id)
+            .map((u: Update) => {
+                const author = allEmployees.find((e: Employee) => `user-${e.id.split('-')[1]}` === u.userId);
                 return {
                     ...u,
                     authorName: author?.name || 'Unknown User',
                     authorAvatar: `https://i.pravatar.cc/150?u=${author?.id}`
                 }
             })
-            .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            .sort((a: Update, b: Update) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setUpdates(projectUpdates);
       }
-      if (id) {
-          fetchUpdates();
-      }
-
+    }
+    fetchProjectData();
   }, [id]);
 
   if (!project) {

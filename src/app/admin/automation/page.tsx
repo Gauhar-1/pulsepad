@@ -1,6 +1,6 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -35,8 +35,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { mockProjectData } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
+import type { ProjectSheetItem } from '@/lib/definitions';
 
 const mockCandidates = [
   { id: 'cand-001', name: 'John Doe', email: 'john.doe@email.com', role: 'React Developer' },
@@ -58,8 +58,18 @@ const communicationChannels = [
 
 export default function AdminAutomationPage() {
   const { toast } = useToast();
+  const [projects, setProjects] = useState<ProjectSheetItem[]>([]);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function fetchProjects() {
+      const res = await fetch('/api/admin/projects');
+      const data = await res.json();
+      setProjects(data);
+    }
+    fetchProjects();
+  }, []);
 
   const handleQueueCommunications = (type: 'project' | 'candidate') => {
     toast({
@@ -137,9 +147,9 @@ export default function AdminAutomationPage() {
                                         <TableRow>
                                             <TableHead className="w-12">
                                                 <Checkbox
-                                                     checked={selectedProjects.length === mockProjectData.length}
+                                                     checked={selectedProjects.length > 0 && selectedProjects.length === projects.length}
                                                      onCheckedChange={(checked) => {
-                                                        setSelectedProjects(checked ? mockProjectData.map(p => p.id) : []);
+                                                        setSelectedProjects(checked ? projects.map(p => p.id) : []);
                                                      }}
                                                 />
                                             </TableHead>
@@ -148,7 +158,7 @@ export default function AdminAutomationPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {mockProjectData.map(p => (
+                                        {projects.map(p => (
                                             <TableRow key={p.id}>
                                                 <TableCell>
                                                     <Checkbox 

@@ -26,7 +26,7 @@ import {
   Filter,
 } from 'lucide-react';
 import type { Employee, ProjectSheetItem } from '@/lib/definitions';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,7 +44,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { CreateProjectSheet } from '@/components/admin/create-project-sheet';
-import { mockProjectData, mockEmployeeData } from '@/lib/mock-data';
 import {
   Select,
   SelectContent,
@@ -66,14 +65,25 @@ const filterOptions = [
 
 export default function AdminProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [projects, setProjects] = useState<ProjectSheetItem[]>(mockProjectData);
-  const [employees] = useState<Employee[]>(mockEmployeeData);
+  const [projects, setProjects] = useState<ProjectSheetItem[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectSheetItem | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const router = useRouter();
 
+  useEffect(() => {
+    async function fetchData() {
+        const [projRes, empRes] = await Promise.all([
+            fetch('/api/admin/projects'),
+            fetch('/api/admin/employees')
+        ]);
+        setProjects(await projRes.json());
+        setEmployees(await empRes.json());
+    }
+    fetchData();
+  }, []);
   
   const filteredProjects = useMemo(() => {
     const searchFiltered = projects.filter(p => 

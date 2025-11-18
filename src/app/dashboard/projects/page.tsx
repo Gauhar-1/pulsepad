@@ -1,3 +1,4 @@
+
 'use client';
 import { ProjectCard } from '@/components/dashboard/project-card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -5,8 +6,6 @@ import { Button } from '@/components/ui/button';
 import { FileText, Filter } from 'lucide-react';
 import type { ProjectSheetItem, Update } from '@/lib/definitions';
 import { useEffect, useState, useMemo } from 'react';
-import { mockProjectData } from '@/lib/mock-data';
-import { getTodaysUpdates } from '@/lib/api';
 
 const filterOptions = [
   { value: 'all', label: 'All Projects' },
@@ -23,9 +22,14 @@ export default function DashboardProjectsPage() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      // In a real app, projects would be fetched based on the logged-in user
-      const userProjects = mockProjectData;
-      const updates = await getTodaysUpdates();
+      const [projectsRes, updatesRes] = await Promise.all([
+        fetch('/api/projects'),
+        fetch('/api/updates/today')
+      ]);
+
+      const userProjects: ProjectSheetItem[] = await projectsRes.json();
+      const updates: Update[] = await updatesRes.json();
+
       setProjects(userProjects);
       setTodaysUpdates(updates);
       setLoading(false);
@@ -47,7 +51,7 @@ export default function DashboardProjectsPage() {
           id: project.id,
           name: project.projectTitle,
           client: project.clientName,
-          status: project.status.toLowerCase().replace(' ', '-') as any,
+          status: project.status.toLowerCase().replace(/\s/g, '-') as any,
           todaysUpdate: update,
         };
         return cardProject;

@@ -1,6 +1,6 @@
 
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -12,36 +12,47 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BookOpen, Eye, User } from 'lucide-react';
-import { mockEmployeeData, mockTrainingTasks } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Employee } from '@/lib/definitions';
+import { Employee, TrainingTask } from '@/lib/definitions';
 
 export default function AdminTrainingPage() {
-  const trainingAssignments = useMemo(() => {
-    const assignments: any[] = [];
-    mockTrainingTasks.forEach(task => {
-      const trainer = mockEmployeeData.find(e => e.id === task.trainerId);
-      task.assignedTo.forEach(employeeId => {
-        const employee = mockEmployeeData.find(e => e.id === employeeId);
-        if (employee) {
-          assignments.push({
-            employee: {
-              id: employee.id,
-              name: employee.name,
-              avatarUrl: `https://i.pravatar.cc/150?u=${employee.id}`,
-            },
-            task: {
-              title: task.title,
-              category: task.category,
-              status: task.status
-            },
-            trainer: trainer
-          });
-        }
-      });
-    });
-    return assignments;
+  const [trainingAssignments, setTrainingAssignments] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+        const [trainingsRes, employeesRes] = await Promise.all([
+            fetch('/api/admin/training'),
+            fetch('/api/admin/employees')
+        ]);
+        const mockTrainingTasks: TrainingTask[] = await trainingsRes.json();
+        const mockEmployeeData: Employee[] = await employeesRes.json();
+
+        const assignments: any[] = [];
+        mockTrainingTasks.forEach(task => {
+        const trainer = mockEmployeeData.find(e => e.id === task.trainerId);
+        task.assignedTo.forEach(employeeId => {
+            const employee = mockEmployeeData.find(e => e.id === employeeId);
+            if (employee) {
+            assignments.push({
+                employee: {
+                id: employee.id,
+                name: employee.name,
+                avatarUrl: `https://i.pravatar.cc/150?u=${employee.id}`,
+                },
+                task: {
+                title: task.title,
+                category: task.category,
+                status: task.status
+                },
+                trainer: trainer
+            });
+            }
+        });
+        });
+        setTrainingAssignments(assignments);
+    }
+    fetchData();
   }, []);
 
   return (

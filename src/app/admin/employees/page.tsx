@@ -25,7 +25,7 @@ import {
   MoreVertical,
 } from 'lucide-react';
 import type { Employee } from '@/lib/definitions';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,17 +43,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { mockEmployeeData } from '@/lib/mock-data';
 import { useRouter } from 'next/navigation';
 
 
 export default function AdminEmployeesPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [employees, setEmployees] = useState<Employee[]>(mockEmployeeData);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    async function fetchEmployees() {
+      const res = await fetch('/api/admin/employees');
+      const data = await res.json();
+      setEmployees(data);
+    }
+    fetchEmployees();
+  }, []);
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(e => 

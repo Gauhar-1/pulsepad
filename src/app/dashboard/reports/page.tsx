@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Card,
@@ -14,9 +15,6 @@ import {
 } from 'lucide-react';
 import type { User as UserType, Update } from '@/lib/definitions';
 import { useEffect, useState } from 'react';
-import {
-  getTodaysUpdates,
-} from '@/lib/api';
 import { useRouter, usePathname } from 'next/navigation';
 
 const EmployeeReport = () => {
@@ -24,7 +22,8 @@ const EmployeeReport = () => {
 
   useEffect(() => {
     async function fetchData() {
-      const todaysUpdates = await getTodaysUpdates();
+      const res = await fetch('/api/updates/today');
+      const todaysUpdates = await res.json();
       setUpdates(todaysUpdates);
     }
     fetchData();

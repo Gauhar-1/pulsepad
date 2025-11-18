@@ -3,7 +3,6 @@
 
 import { useParams, notFound } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
-import { mockEmployeeData, mockProjectData, mockTrainingTasks } from '@/lib/mock-data';
 import type { Employee, Update, ProjectSheetItem, TrainingTask } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +18,6 @@ import {
   Calendar,
   BookOpen,
 } from 'lucide-react';
-import { getAllUpdates } from '@/lib/api';
 
 const DetailItem = ({
   icon: Icon,
@@ -62,48 +60,60 @@ export default function EmployeeDetailPage() {
   const [assignedTrainings, setAssignedTrainings] = useState<AssignedTraining[]>([]);
 
   useEffect(() => {
-    const foundEmployee = mockEmployeeData.find((p) => p.id === id);
-    if (foundEmployee) {
-      setEmployee(foundEmployee);
-      setProjects(mockProjectData.filter(p => foundEmployee.projects.includes(p.projectTitle)));
+    if (!id) return;
+    
+    async function fetchData() {
+        const [employeeRes, projectsRes, trainingsRes, updatesRes, allEmployeesRes] = await Promise.all([
+            fetch(`/api/admin/employees?id=${id}`),
+            fetch('/api/admin/projects'),
+            fetch('/api/admin/training'),
+            fetch('/api/admin/updates'),
+            fetch('/api/admin/employees'),
+        ]);
 
-       const trainings = mockTrainingTasks
-        .filter(task => task.assignedTo.includes(foundEmployee.id))
-        .map(task => {
-            const trainer = mockEmployeeData.find(e => e.id === task.trainerId);
-            return {
-                ...task,
-                trainerName: trainer?.name || 'N/A'
-            }
-        });
-       setAssignedTrainings(trainings);
-    }
+        const foundEmployee: Employee = await employeeRes.json();
+        const allProjects: ProjectSheetItem[] = await projectsRes.json();
+        const allTrainings: TrainingTask[] = await trainingsRes.json();
+        const allUpdates: Update[] = await updatesRes.json();
+        const allEmployees: Employee[] = await allEmployeesRes.json();
+        
+        if (foundEmployee) {
+            setEmployee(foundEmployee);
+            setProjects(allProjects.filter(p => foundEmployee.projects.includes(p.projectTitle)));
 
-    async function fetchUpdates() {
-        const allUpdates = await getAllUpdates();
-        const employeeUpdates = allUpdates
-            .filter(u => u.userId === `user-${(id as string).split('-')[1]}`)
-            .map(u => {
-                const project = mockProjectData.find(p => p.id === u.projectId);
-                return {
-                    ...u,
-                    projectName: project?.projectTitle || 'Unknown Project'
-                }
-            })
-            .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setUpdates(employeeUpdates);
+            const trainings = allTrainings
+                .filter(task => task.assignedTo.includes(foundEmployee.id))
+                .map(task => {
+                    const trainer = allEmployees.find(e => e.id === task.trainerId);
+                    return {
+                        ...task,
+                        trainerName: trainer?.name || 'N/A'
+                    }
+                });
+            setAssignedTrainings(trainings);
+
+            const employeeUpdates = allUpdates
+                .filter(u => u.userId === `user-${(id as string).split('-')[1]}`)
+                .map(u => {
+                    const project = allProjects.find(p => p.id === u.projectId);
+                    return {
+                        ...u,
+                        projectName: project?.projectTitle || 'Unknown Project'
+                    }
+                })
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            setUpdates(employeeUpdates);
+        }
     }
     
-    if (id) {
-        fetchUpdates();
-    }
+    fetchData();
 
   }, [id]);
 
   const memoizedProjects = useMemo(() => {
     if (!employee) return [];
-    return mockProjectData.filter(p => employee.projects.includes(p.projectTitle));
-  }, [employee]);
+    return projects;
+  }, [employee, projects]);
 
   if (!employee) {
     if (employee === null) {
