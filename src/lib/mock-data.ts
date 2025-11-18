@@ -292,3 +292,34 @@ export const mockAuditLogs = [
         icon: 'Trash2',
     }
 ];
+
+export const mockNotifications = [
+    {
+        id: 'notif-001',
+        subject: 'Project Assignment: QuantumLeap CRM',
+        message: "You have been assigned as the Project Leader for QuantumLeap CRM. Please review the project details and connect with the team.",
+        timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+        read: false,
+    },
+    {
+        id: 'notif-002',
+        subject: 'Daily Update Reminder',
+        message: "This is a friendly reminder to submit your daily updates for all active projects before the end of the day.",
+        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+        read: false,
+    },
+    {
+        id: 'notif-003',
+        subject: 'Deadline Approaching: Nova E-commerce',
+        message: "The deadline for the 'Development Sprint 1' milestone for the Nova E-commerce Platform is in 3 days. Please ensure all tasks are on track.",
+        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        read: true,
+    },
+     {
+        id: 'notif-004',
+        subject: 'New Company-wide Training Module',
+        message: "A new training module, 'Advanced TypeScript Techniques', has been assigned to you. Please complete it by the end of next week.",
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        read: true,
+    },
+];

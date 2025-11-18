@@ -1,6 +1,6 @@
+
 'use client';
 import { useParams, notFound } from 'next/navigation';
-import { mockTrainingTasks } from '@/lib/mock-data';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -10,12 +10,114 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import type { TrainingTask } from '@/lib/definitions';
+import { useQuery } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const fetchTrainingTask = async (id: string): Promise<TrainingTask> => {
+    const res = await fetch(`/api/employee/training?id=${id}`);
+    if (!res.ok) {
+        throw new Error('Failed to fetch training task');
+    }
+    return res.json();
+};
+
+const TrainingDetailSkeleton = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+            <Card>
+                <CardHeader>
+                    <div className="flex justify-between items-start">
+                        <div>
+                             <Skeleton className="h-6 w-24 mb-2" />
+                             <Skeleton className="h-8 w-64" />
+                        </div>
+                        <Skeleton className="h-10 w-32" />
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/4 mb-6" />
+                    <div className="mb-2 flex justify-between items-center">
+                        <Skeleton className="h-5 w-24" />
+                        <Skeleton className="h-5 w-12" />
+                    </div>
+                    <Skeleton className="h-4 w-full" />
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Log Your Progress</CardTitle>
+                    <CardDescription>Submit a quick update on what you've learned or completed.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="progress-update">Update Details</Label>
+                            <Textarea id="progress-update" placeholder="e.g., 'Completed Chapter 3 on Server Actions and deployed a test case.'" />
+                        </div>
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button className="ml-auto">Submit Progress</Button>
+                </CardFooter>
+            </Card>
+        </div>
+        <div>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <MessageSquare /> Progress Log
+                    </CardTitle>
+                    <CardDescription>A history of your updates for this task.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <div className="relative pl-6 space-y-8">
+                        <div className="absolute left-[22px] top-0 h-full w-0.5 bg-border -translate-x-1/2"></div>
+                        {Array.from({length: 2}).map((_, i) => (
+                             <div key={i} className="flex items-start gap-4">
+                                <Skeleton className="z-10 h-10 w-10 rounded-full" />
+                                <div className="flex-1 pt-1 space-y-2">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-3 w-1/4" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+);
+
 
 export default function TrainingDetailPage() {
     const { id } = useParams();
-    const task = mockTrainingTasks.find(t => t.id === Number(id));
+    
+    const { data: task, isLoading, isError } = useQuery<TrainingTask>({
+        queryKey: ['trainingTask', id],
+        queryFn: () => fetchTrainingTask(id as string),
+        enabled: !!id,
+    });
 
-    if (!task) {
+    if (isLoading) {
+        return (
+            <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+                 <div className="flex items-center gap-4">
+                    <Button variant="outline" size="icon" asChild>
+                        <Link href="/employee/training">
+                            <ArrowLeft className="h-4 w-4" />
+                            <span className="sr-only">Back to Training</span>
+                        </Link>
+                    </Button>
+                    <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Training Details</h1>
+                </div>
+                <TrainingDetailSkeleton />
+            </main>
+        )
+    }
+
+    if (isError || !task) {
         return notFound();
     }
 
