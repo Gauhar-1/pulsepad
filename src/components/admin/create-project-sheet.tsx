@@ -20,13 +20,19 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Employee, ProjectSheetItem } from '@/lib/definitions';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
 import { Checkbox } from '../ui/checkbox';
+import { PlusCircle, Trash2 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '../ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 const statusEnum = [
     'On Hold', 'Completed', 'Cancelled', 
@@ -36,6 +42,8 @@ const statusEnum = [
 ] as const;
 
 const projectTypeEnum = ['Client', 'Research', 'Management', 'Training'] as const;
+
+const milestoneStatusEnum = ['upcoming', 'completed', 'missed'] as const;
 
 const formSchema = z.object({
   clientName: z.string().min(1, 'Client name is required'),
@@ -58,6 +66,12 @@ const formSchema = z.object({
   loomLink: z.string().url().optional().or(z.literal('')),
   whatsappLink: z.string().url().optional().or(z.literal('')),
   oneDriveLink: z.string().url().optional().or(z.literal('')),
+  milestones: z.array(z.object({
+    id: z.string().optional(),
+    name: z.string().min(1, 'Milestone name is required'),
+    date: z.date({ required_error: 'Date is required' }),
+    status: z.enum(milestoneStatusEnum),
+  })).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -110,7 +124,13 @@ export function CreateProjectSheet({
       loomLink: '',
       whatsappLink: '',
       oneDriveLink: '',
+      milestones: [],
     },
+  });
+
+   const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "milestones",
   });
 
   useEffect(() => {
@@ -122,6 +142,7 @@ export function CreateProjectSheet({
         tags: project.tags.join(', '),
         freelancers: project.freelancers || [],
         coders: project.coders || [],
+        milestones: project.milestones?.map(m => ({ ...m, date: new Date(m.date) })) || [],
       });
     } else {
       form.reset({
@@ -145,6 +166,7 @@ export function CreateProjectSheet({
         loomLink: '',
         whatsappLink: '',
         oneDriveLink: '',
+        milestones: [],
       });
     }
   }, [project, isEditMode, form]);
@@ -155,6 +177,7 @@ export function CreateProjectSheet({
         tags: values.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
         freelancers: values.freelancers || [],
         coders: values.coders || [],
+        milestones: values.milestones?.map(m => ({...m, id: m.id || `m-${Date.now()}`, date: format(m.date, 'yyyy-MM-dd')}))
     } as Omit<ProjectSheetItem, 'id'>;
     onSaveProject(projectData, project?.id);
     onOpenChange(false);
@@ -391,6 +414,81 @@ export function CreateProjectSheet({
                                 </FormItem>
                             )}/>
                         </div>
+
+                         <div className="space-y-4">
+                            <h3 className="text-sm font-medium">Milestones</h3>
+                            <div className="space-y-4">
+                                {fields.map((field, index) => (
+                                <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end p-3 border rounded-lg">
+                                    <FormField
+                                        control={form.control}
+                                        name={`milestones.${index}.name`}
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Milestone Name</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="e.g., Design Complete" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name={`milestones.${index}.date`}
+                                        render={({ field }) => (
+                                        <FormItem className="flex flex-col">
+                                            <FormLabel>Due Date</FormLabel>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <FormControl>
+                                                        <Button variant="outline" className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                        </Button>
+                                                    </FormControl>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0" align="start">
+                                                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus/>
+                                                </PopoverContent>
+                                            </Popover>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
+                                     <FormField
+                                        control={form.control}
+                                        name={`milestones.${index}.status`}
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Status</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select status" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                   {milestoneStatusEnum.map(status => (
+                                                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
+                                    <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                ))}
+                            </div>
+                            <Button type="button" variant="outline" onClick={() => append({ name: '', date: new Date(), status: 'upcoming' })}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Add Milestone
+                            </Button>
+                        </div>
                         
                         <div className="space-y-2">
                             <h3 className="text-sm font-medium">Project Links</h3>
@@ -423,3 +521,4 @@ export function CreateProjectSheet({
     </Sheet>
   );
 }
+
