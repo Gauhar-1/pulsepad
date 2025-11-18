@@ -9,17 +9,109 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CheckCircle, Clock, Github, Link as LinkIcon, Mail, Phone } from 'lucide-react';
+import { CheckCircle, Clock, Github, Link as LinkIcon, Mail, Phone, FileText, ListChecks, Briefcase, Calendar, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { ProjectSheetItem } from '@/lib/definitions';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 const fetchProjects = async (): Promise<ProjectSheetItem[]> => {
     const res = await fetch('/api/admin/projects');
     if (!res.ok) throw new Error('Failed to fetch projects');
     return res.json();
 }
+
+const DetailItem = ({
+  icon: Icon,
+  label,
+  value,
+  children,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value?: string | number | string[] | null;
+  children?: React.ReactNode;
+}) => {
+  if ((!value || (Array.isArray(value) && value.length === 0)) && !children)
+    return null;
+
+  return (
+    <div className="flex items-start gap-3">
+      <Icon className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+      <div className="flex-1">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <div className="text-sm">{children || value}</div>
+      </div>
+    </div>
+  );
+};
+
+
+const ProjectDetailsSkeleton = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle><Skeleton className="h-6 w-32" /></CardTitle>
+        <CardDescription><Skeleton className="h-4 w-48" /></CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-12 w-full mb-6" />
+        <Separator className="my-6" />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            {Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+        </div>
+      </CardContent>
+    </Card>
+);
+
+const ProjectDetails = () => {
+    const { data: projects, isLoading } = useQuery<ProjectSheetItem[]>({
+        queryKey: ['projects'],
+        queryFn: fetchProjects
+    });
+
+    if (isLoading || !projects) return <ProjectDetailsSkeleton />;
+
+    const project = projects[0];
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Project Details</CardTitle>
+                <CardDescription>Key information about {project.projectTitle}.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <DetailItem icon={FileText} label="Description">
+                    <p className="whitespace-pre-wrap">{project.projectDescription || 'No description provided.'}</p>
+                </DetailItem>
+                <Separator />
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <DetailItem icon={ListChecks} label="Status">
+                        <Badge
+                            variant={ project.status === 'Active' ? 'default' :
+                                project.status === 'On Hold' || project.status === 'Stalled' ? 'secondary' :
+                                'outline'
+                            }
+                        >
+                            {project.status}
+                        </Badge>
+                    </DetailItem>
+                    <DetailItem icon={Briefcase} label="Priority" value={project.priority} />
+                    <DetailItem icon={Calendar} label="Start Date" value={project.startDate} />
+                    <DetailItem icon={Calendar} label="End Date" value={project.endDate} />
+                </div>
+                 <Separator />
+                <DetailItem icon={Tag} label="Tags">
+                    <div className="flex flex-wrap gap-1">
+                        {project.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+                    </div>
+                </DetailItem>
+            </CardContent>
+        </Card>
+    )
+};
+
 
 const ClientReportSkeleton = () => (
     <Card>
@@ -202,7 +294,8 @@ export default function ClientPage() {
             </h1>
         </div>
         <div className="grid gap-8 md:grid-cols-3">
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 space-y-8">
+                <ProjectDetails />
                 <ClientReport />
             </div>
             <div className="space-y-8">
