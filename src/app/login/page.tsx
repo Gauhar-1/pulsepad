@@ -38,7 +38,7 @@ export default function LoginPage() {
         } else if (user.role === 'client') {
             router.push('/client');
         } else {
-            router.push('/dashboard');
+            router.push('/employee');
         }
     }
   }, [router]);
@@ -52,7 +52,7 @@ export default function LoginPage() {
         } else if (user.role === 'client') {
             router.push('/client');
         } else {
-            router.push('/dashboard');
+            router.push('/employee');
         }
     }
   };

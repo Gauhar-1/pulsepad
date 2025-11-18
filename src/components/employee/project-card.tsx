@@ -1,4 +1,3 @@
-
 'use client';
 import { useState } from 'react';
 import type { Project, Update } from '@/lib/definitions';
@@ -30,7 +29,7 @@ export function ProjectCard({ project }: { project: ProjectWithUpdate }) {
               </CardDescription>
             </div>
              <Button variant="ghost" size="icon" asChild>
-                <Link href={`/dashboard/projects/${project.id}`}>
+                <Link href={`/employee/projects/${project.id}`}>
                     <Eye className="h-5 w-5 text-muted-foreground" />
                     <span className="sr-only">View Details</span>
                 </Link>

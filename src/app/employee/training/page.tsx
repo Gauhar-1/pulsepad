@@ -1,4 +1,3 @@
-
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BookOpen, CheckCircle, Clock, Eye } from 'lucide-react';
@@ -35,7 +34,7 @@ export default function TrainingPage() {
                     </span>
                 </div>
                  <Button asChild variant="outline" size="icon">
-                    <Link href={`/dashboard/training/${task.id}`}>
+                    <Link href={`/employee/training/${task.id}`}>
                         <Eye className="h-4 w-4" />
                         <span className="sr-only">View Details</span>
                     </Link>

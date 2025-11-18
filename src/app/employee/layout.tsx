@@ -46,13 +46,13 @@ const useMockUser = () => {
 };
 
 const employeeNavItems = [
-  { href: '/dashboard/projects', icon: LayoutDashboard, label: 'My Projects' },
-  { href: '/dashboard/notifications', icon: Bell, label: 'Notifications' },
-  { href: '/dashboard/training', icon: BookOpen, label: 'Training' },
-  { href: '/dashboard/reports', icon: FileText, label: 'Reports' },
+  { href: '/employee/projects', icon: LayoutDashboard, label: 'My Projects' },
+  { href: '/employee/notifications', icon: Bell, label: 'Notifications' },
+  { href: '/employee/training', icon: BookOpen, label: 'Training' },
+  { href: '/employee/reports', icon: FileText, label: 'Reports' },
 ];
 
-export default function DashboardLayout({
+export default function EmployeeLayout({
   children,
 }: {
   children: React.ReactNode;

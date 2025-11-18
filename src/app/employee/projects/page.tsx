@@ -1,6 +1,5 @@
-
 'use client';
-import { ProjectCard } from '@/components/dashboard/project-card';
+import { ProjectCard } from '@/components/employee/project-card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { FileText, Filter } from 'lucide-react';
@@ -44,7 +43,7 @@ const ProjectCardSkeleton = () => (
     </Card>
 );
 
-export default function DashboardProjectsPage() {
+export default function EmployeeProjectsPage() {
   const [activeFilter, setActiveFilter] = useState('all');
 
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery<ProjectSheetItem[]>({

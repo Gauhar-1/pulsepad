@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -63,9 +62,9 @@ export async function submitUpdate(prevState: State, formData: FormData) {
     };
   }
 
-  revalidatePath('/dashboard');
-  revalidatePath('/dashboard/projects');
-  revalidatePath(`/dashboard/projects/${projectId}`);
+  revalidatePath('/employee');
+  revalidatePath('/employee/projects');
+  revalidatePath(`/employee/projects/${projectId}`);
   revalidatePath('/admin/projects');
   revalidatePath(`/admin/projects/${projectId}`);
   return { message: 'Update submitted successfully.' };
