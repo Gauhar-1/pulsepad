@@ -21,7 +21,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Search,
-  Download,
   UserPlus
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -103,20 +102,6 @@ export default function AdminCandidatesPage() {
     });
   }, [searchQuery, statusFilter, candidates]);
 
-  const exportToCSV = () => {
-    const headers = ['Name', 'Email', 'Role', 'Status'];
-    const rows = filteredCandidates.map(c => [c.name, c.email, c.role, c.status]);
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'candidates.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className="admin-dashboard-gradient min-h-screen p-4 sm:p-8">
       <header className="mb-8 flex items-center justify-between">
@@ -157,9 +142,6 @@ export default function AdminCandidatesPage() {
                             ))}
                         </SelectContent>
                     </Select>
-                    <Button variant="outline" onClick={exportToCSV}>
-                        <Download className="mr-2 h-4 w-4" /> Export CSV
-                    </Button>
                 </div>
             </div>
           </CardHeader>
