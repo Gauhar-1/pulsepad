@@ -244,4 +244,51 @@ export const mockTrainingTasks: TrainingTask[] = [
     trainerId: 'emp-008'
   },
 ];
-    
+
+export const mockAuditLogs = [
+    {
+        id: 'log-001',
+        user: { name: 'Jane Smith', avatar: 'https://i.pravatar.cc/150?u=admin' },
+        action: 'updated the status',
+        project: 'QuantumLeap CRM',
+        details: { from: 'Active', to: 'On Hold' },
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        icon: 'Edit3',
+    },
+    {
+        id: 'log-002',
+        user: { name: 'David Chen', avatar: 'https://i.pravatar.cc/150?u=emp-008' },
+        action: 'assigned a new coder',
+        project: 'Nova E-commerce Platform',
+        details: { coder: 'Kenji Tanaka' },
+        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+        icon: 'User',
+    },
+    {
+        id: 'log-003',
+        user: { name: 'Jane Smith', avatar: 'https://i.pravatar.cc/150?u=admin' },
+        action: 'created a new project',
+        project: 'Internal Onboarding Portal',
+        details: null,
+        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        icon: 'PlusCircle',
+    },
+    {
+        id: 'log-004',
+        user: { name: 'Alex Doe', avatar: 'https://i.pravatar.cc/150?u=emp-001' },
+        action: 'changed the end date',
+        project: 'Project Phoenix',
+        details: { from: '2024-10-31', to: '2024-11-15' },
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        icon: 'Edit3',
+    },
+    {
+        id: 'log-005',
+        user: { name: 'Jane Smith', avatar: 'https://i.pravatar.cc/150?u=admin' },
+        action: 'deleted a project',
+        project: 'Legacy System Support',
+        details: null,
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        icon: 'Trash2',
+    }
+];
