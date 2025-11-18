@@ -44,7 +44,36 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
 
+
+const TableSkeleton = ({rows = 5}: {rows?: number}) => (
+    <Table>
+        <TableHeader>
+            <TableRow>
+                <TableHead><Skeleton className="h-5 w-20" /></TableHead>
+                <TableHead><Skeleton className="h-5 w-32" /></TableHead>
+                <TableHead><Skeleton className="h-5 w-48" /></TableHead>
+                <TableHead><Skeleton className="h-5 w-16" /></TableHead>
+                <TableHead><span className="sr-only">Actions</span></TableHead>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            {Array.from({length: rows}).map((_, i) => (
+                <TableRow key={i}>
+                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-40" /></TableCell>
+                    <TableCell className="flex gap-1">
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-5 w-20" />
+                    </TableCell>
+                    <TableCell><Skeleton className="h-6 w-14 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                </TableRow>
+            ))}
+        </TableBody>
+    </Table>
+)
 
 export default function AdminEmployeesPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,13 +81,16 @@ export default function AdminEmployeesPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     async function fetchEmployees() {
+      setLoading(true);
       const res = await fetch('/api/admin/employees');
       const data = await res.json();
       setEmployees(data);
+      setLoading(false);
     }
     fetchEmployees();
   }, []);
@@ -151,61 +183,63 @@ export default function AdminEmployeesPage() {
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Skills</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead><span className="sr-only">Actions</span></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredEmployees.map((employee) => (
-                                <TableRow key={employee.id}>
-                                    <TableCell className="font-medium">{employee.name}</TableCell>
-                                    <TableCell>{employee.email}</TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-wrap gap-1">
-                                            {employee.skills.map(skill => (
-                                                <Badge key={skill} variant="secondary">{skill}</Badge>
-                                            ))}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant={
-                                                employee.active ? 'default' : 'outline'
-                                            }
-                                             className={employee.active ? 'bg-green-100 text-green-800' : ''}
-                                        >
-                                            {employee.active ? 'Active' : 'Inactive'}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent>
-                                                <DropdownMenuItem onClick={() => handleEditClick(employee)}>Edit</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleViewClick(employee)}>View Details</DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                  className="text-destructive"
-                                                  onClick={() => handleDeactivateClick(employee)}
-                                                >
-                                                  Deactivate
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
+                    {loading ? <TableSkeleton /> : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>Skills</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead><span className="sr-only">Actions</span></TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredEmployees.map((employee) => (
+                                    <TableRow key={employee.id}>
+                                        <TableCell className="font-medium">{employee.name}</TableCell>
+                                        <TableCell>{employee.email}</TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-wrap gap-1">
+                                                {employee.skills.map(skill => (
+                                                    <Badge key={skill} variant="secondary">{skill}</Badge>
+                                                ))}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                variant={
+                                                    employee.active ? 'default' : 'outline'
+                                                }
+                                                 className={employee.active ? 'bg-green-100 text-green-800' : ''}
+                                            >
+                                                {employee.active ? 'Active' : 'Inactive'}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem onClick={() => handleEditClick(employee)}>Edit</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleViewClick(employee)}>View Details</DropdownMenuItem>
+                                                    <DropdownMenuItem 
+                                                      className="text-destructive"
+                                                      onClick={() => handleDeactivateClick(employee)}
+                                                    >
+                                                      Deactivate
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
                 </div>
             </CardContent>
         </Card>

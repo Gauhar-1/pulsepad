@@ -52,6 +52,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const filterOptions = [
     { value: 'all', label: 'All Projects' },
@@ -63,6 +64,37 @@ const filterOptions = [
     { value: 'training', label: 'Training' },
 ];
 
+const TableSkeleton = ({rows = 5}: {rows?: number}) => (
+    <Table>
+        <TableHeader>
+            <TableRow>
+                <TableHead><Skeleton className="h-5 w-40" /></TableHead>
+                <TableHead><Skeleton className="h-5 w-24" /></TableHead>
+                <TableHead><Skeleton className="h-5 w-20" /></TableHead>
+                <TableHead className="hidden md:table-cell"><Skeleton className="h-5 w-20" /></TableHead>
+                <TableHead><Skeleton className="h-5 w-24" /></TableHead>
+                <TableHead className="hidden lg:table-cell"><Skeleton className="h-5 w-24" /></TableHead>
+                <TableHead className="hidden lg:table-cell"><Skeleton className="h-5 w-24" /></TableHead>
+                <TableHead><span className="sr-only">Actions</span></TableHead>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            {Array.from({length: rows}).map((_, i) => (
+                <TableRow key={i}>
+                    <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                    <TableCell className="hidden lg:table-cell"><Skeleton className="h-5 w-full" /></TableCell>
+                    <TableCell className="hidden lg:table-cell"><Skeleton className="h-5 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                </TableRow>
+            ))}
+        </TableBody>
+    </Table>
+)
+
 export default function AdminProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<ProjectSheetItem[]>([]);
@@ -71,16 +103,19 @@ export default function AdminProjectsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectSheetItem | null>(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
+        setLoading(true);
         const [projRes, empRes] = await Promise.all([
             fetch('/api/admin/projects'),
             fetch('/api/admin/employees')
         ]);
         setProjects(await projRes.json());
         setEmployees(await empRes.json());
+        setLoading(false);
     }
     fetchData();
   }, []);
@@ -227,62 +262,64 @@ export default function AdminProjectsPage() {
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Project Title</TableHead>
-                                <TableHead>Client</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="hidden md:table-cell">Priority</TableHead>
-                                <TableHead>Assignee</TableHead>
-                                <TableHead className="hidden lg:table-cell">Start Date</TableHead>
-                                <TableHead className="hidden lg:table-cell">End Date</TableHead>
-                                <TableHead><span className="sr-only">Actions</span></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredProjects.map((project) => (
-                                <TableRow key={project.id}>
-                                    <TableCell className="font-medium max-w-xs truncate">{project.projectTitle}</TableCell>
-                                    <TableCell className="hidden sm:table-cell">{project.clientName}</TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant={
-                                                project.status === 'Active' ? 'default' :
-                                                project.status === 'On Hold' || project.status === 'Stalled' ? 'secondary' :
-                                                'outline'
-                                            }
-                                        >
-                                            {project.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="hidden md:table-cell">{project.priority}</TableCell>
-                                    <TableCell className="hidden sm:table-cell">{project.leadAssignee}</TableCell>
-                                    <TableCell className="hidden lg:table-cell">{project.startDate}</TableCell>
-                                    <TableCell className="hidden lg:table-cell">{project.endDate}</TableCell>
-                                    <TableCell>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent>
-                                                <DropdownMenuItem onClick={() => handleEditClick(project)}>Edit</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleViewClick(project)}>View Details</DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                  className="text-destructive"
-                                                  onClick={() => handleDeleteClick(project)}
-                                                >
-                                                  Delete
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
+                    {loading ? <TableSkeleton /> : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Project Title</TableHead>
+                                    <TableHead>Client</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="hidden md:table-cell">Priority</TableHead>
+                                    <TableHead>Assignee</TableHead>
+                                    <TableHead className="hidden lg:table-cell">Start Date</TableHead>
+                                    <TableHead className="hidden lg:table-cell">End Date</TableHead>
+                                    <TableHead><span className="sr-only">Actions</span></TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredProjects.map((project) => (
+                                    <TableRow key={project.id}>
+                                        <TableCell className="font-medium max-w-xs truncate">{project.projectTitle}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">{project.clientName}</TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                variant={
+                                                    project.status === 'Active' ? 'default' :
+                                                    project.status === 'On Hold' || project.status === 'Stalled' ? 'secondary' :
+                                                    'outline'
+                                                }
+                                            >
+                                                {project.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="hidden md:table-cell">{project.priority}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">{project.leadAssignee}</TableCell>
+                                        <TableCell className="hidden lg:table-cell">{project.startDate}</TableCell>
+                                        <TableCell className="hidden lg:table-cell">{project.endDate}</TableCell>
+                                        <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem onClick={() => handleEditClick(project)}>Edit</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleViewClick(project)}>View Details</DropdownMenuItem>
+                                                    <DropdownMenuItem 
+                                                      className="text-destructive"
+                                                      onClick={() => handleDeleteClick(project)}
+                                                    >
+                                                      Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
                 </div>
             </CardContent>
         </Card>

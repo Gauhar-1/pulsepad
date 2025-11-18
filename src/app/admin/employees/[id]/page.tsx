@@ -18,6 +18,7 @@ import {
   Calendar,
   BookOpen,
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const DetailItem = ({
   icon: Icon,
@@ -52,17 +53,79 @@ interface AssignedTraining extends TrainingTask {
     trainerName: string;
 }
 
+const EmployeeDetailSkeleton = () => (
+    <div className="p-4 sm:p-8">
+        <header className="mb-8 flex items-center gap-4">
+            <Skeleton className="h-20 w-20 rounded-full" />
+            <div>
+                <Skeleton className="h-8 w-48 mb-2" />
+                <Skeleton className="h-6 w-64" />
+            </div>
+        </header>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-40" />
+                        <Skeleton className="h-4 w-56" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-8">
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="space-y-8">
+                <Card>
+                    <CardHeader>
+                       <Skeleton className="h-6 w-32" />
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <Skeleton className="h-5 w-full" />
+                        <Skeleton className="h-5 w-full" />
+                        <Skeleton className="h-5 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-32" />
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        <Skeleton className="h-5 w-24" />
+                        <Skeleton className="h-5 w-24" />
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-40" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                       <Skeleton className="h-8 w-full" />
+                       <Skeleton className="h-8 w-full" />
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    </div>
+);
+
 export default function EmployeeDetailPage() {
   const { id } = useParams();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [updates, setUpdates] = useState<UpdateWithProject[]>([]);
   const [projects, setProjects] = useState<ProjectSheetItem[]>([]);
   const [assignedTrainings, setAssignedTrainings] = useState<AssignedTraining[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
     
     async function fetchData() {
+        setLoading(true);
         const [employeeRes, projectsRes, trainingsRes, updatesRes, allEmployeesRes] = await Promise.all([
             fetch(`/api/admin/employees?id=${id}`),
             fetch('/api/admin/projects'),
@@ -104,6 +167,7 @@ export default function EmployeeDetailPage() {
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
             setUpdates(employeeUpdates);
         }
+        setLoading(false);
     }
     
     fetchData();
@@ -115,10 +179,11 @@ export default function EmployeeDetailPage() {
     return projects;
   }, [employee, projects]);
 
+  if (loading) {
+    return <EmployeeDetailSkeleton />;
+  }
+
   if (!employee) {
-    if (employee === null) {
-      return <div className="p-8">Loading employee details...</div>;
-    }
     return notFound();
   }
 

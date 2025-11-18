@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const DetailItem = ({
   icon: Icon,
@@ -61,16 +62,90 @@ interface UpdateWithAuthor extends Update {
     authorAvatar: string;
 }
 
+const ProjectDetailSkeleton = () => (
+    <div className="p-4 sm:p-8">
+        <header className="mb-8">
+            <Skeleton className="h-9 w-3/4 mb-2" />
+            <Skeleton className="h-7 w-1/2" />
+        </header>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-8">
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-32" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-16 w-full" />
+                        <Separator className="my-6" />
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+                            {Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+                        </div>
+                        <Separator className="my-6" />
+                        <Skeleton className="h-8 w-full" />
+                    </CardContent>
+                </Card>
+                <Card>
+                     <CardHeader>
+                        <Skeleton className="h-6 w-40" />
+                        <Skeleton className="h-4 w-56" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-8">
+                            <Skeleton className="h-12 w-full" />
+                            <Skeleton className="h-12 w-full" />
+                        </div>
+                    </CardContent>
+                </Card>
+                 <Card>
+                     <CardHeader>
+                        <Skeleton className="h-6 w-40" />
+                        <Skeleton className="h-4 w-56" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-8">
+                            <Skeleton className="h-12 w-full" />
+                            <Skeleton className="h-12 w-full" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="space-y-8">
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-24" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-20" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-9 w-full" />
+                        <Skeleton className="h-9 w-full" />
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    </div>
+);
+
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
   const [project, setProject] = useState<ProjectSheetItem | null>(null);
   const [team, setTeam] = useState<Employee[]>([]);
   const [updates, setUpdates] = useState<UpdateWithAuthor[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
     async function fetchProjectData() {
+      setLoading(true);
       const [projectRes, employeesRes, updatesRes] = await Promise.all([
         fetch(`/api/admin/projects?id=${id}`),
         fetch('/api/admin/employees'),
@@ -112,14 +187,16 @@ export default function ProjectDetailPage() {
             .sort((a: Update, b: Update) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setUpdates(projectUpdates);
       }
+      setLoading(false);
     }
     fetchProjectData();
   }, [id]);
 
+  if (loading) {
+    return <ProjectDetailSkeleton />;
+  }
+
   if (!project) {
-    if (project === null) {
-      return <div className="p-8">Loading project details...</div>;
-    }
     return notFound();
   }
 
