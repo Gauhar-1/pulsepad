@@ -33,6 +33,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 type Candidate = {
   id: string;
@@ -53,11 +55,40 @@ const fetchCandidates = async (): Promise<Candidate[]> => {
 
 const statusFilters = ['All', 'New', 'Interviewing', 'Hired', 'Rejected'];
 
+const TableSkeleton = ({rows = 5}: {rows?: number}) => (
+    <Table>
+        <TableHeader>
+            <TableRow>
+                <TableHead><Skeleton className="h-5 w-48" /></TableHead>
+                <TableHead><Skeleton className="h-5 w-32" /></TableHead>
+                <TableHead><Skeleton className="h-5 w-24" /></TableHead>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            {Array.from({length: rows}).map((_, i) => (
+                <TableRow key={i}>
+                    <TableCell>
+                        <div className="flex items-center gap-3">
+                            <Skeleton className="h-10 w-10 rounded-full" />
+                            <div className='space-y-1'>
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-3 w-32" />
+                            </div>
+                        </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-5 w-40" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                </TableRow>
+            ))}
+        </TableBody>
+    </Table>
+)
+
 export default function AdminCandidatesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   
-  const { data: candidates = [] } = useQuery<Candidate[]>({
+  const { data: candidates = [], isLoading } = useQuery<Candidate[]>({
     queryKey: ['candidates'],
     queryFn: fetchCandidates,
   });
@@ -104,7 +135,7 @@ export default function AdminCandidatesPage() {
              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <CardTitle>All Candidates</CardTitle>
-                    <CardDescription>{filteredCandidates.length} of {candidates.length} candidates shown.</CardDescription>
+                    <CardDescription>{isLoading ? 'Loading candidates...' : `${filteredCandidates.length} of ${candidates.length} candidates shown.`}</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="relative w-full md:max-w-sm">
@@ -134,48 +165,50 @@ export default function AdminCandidatesPage() {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Candidate</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCandidates.map((candidate) => (
-                    <TableRow key={candidate.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarImage src={candidate.avatarUrl} />
-                            <AvatarFallback>{candidate.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{candidate.name}</p>
-                            <p className="text-sm text-muted-foreground">{candidate.email}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{candidate.role}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            candidate.status === 'Hired' ? 'default' : 
-                            candidate.status === 'Interviewing' ? 'secondary' : 'outline'
-                          }
-                          className={
-                            candidate.status === 'Hired' ? 'bg-green-100 text-green-800' :
-                            candidate.status === 'Rejected' ? 'bg-red-100 text-red-800' : ''
-                          }
-                        >
-                          {candidate.status}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                {isLoading ? <TableSkeleton /> : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Candidate</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCandidates.map((candidate) => (
+                        <TableRow key={candidate.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar>
+                                <AvatarImage src={candidate.avatarUrl} />
+                                <AvatarFallback>{candidate.name.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium">{candidate.name}</p>
+                                <p className="text-sm text-muted-foreground">{candidate.email}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{candidate.role}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                candidate.status === 'Hired' ? 'default' : 
+                                candidate.status === 'Interviewing' ? 'secondary' : 'outline'
+                              }
+                              className={
+                                candidate.status === 'Hired' ? 'bg-green-100 text-green-800' :
+                                candidate.status === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+                              }
+                            >
+                              {candidate.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
             </div>
           </CardContent>
         </Card>
