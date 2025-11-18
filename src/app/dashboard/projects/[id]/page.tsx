@@ -2,9 +2,8 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
-import { mockProjectData, mockEmployeeData } from '@/lib/mock-data';
-import type { ProjectSheetItem, Employee, Update, Milestone } from '@/lib/definitions';
+import { useMemo } from 'react';
+import type { ProjectSheetItem, Employee, Update } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -20,17 +19,15 @@ import {
   Milestone as MilestoneIcon,
   Tag,
   User,
-  Users,
   MessageSquare,
-  Star,
   Flag,
-  CalendarClock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getAllUpdates } from '@/lib/api';
-import { differenceInDays, formatDistanceToNowStrict } from 'date-fns';
+import { differenceInDays } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const DetailItem = ({
   icon: Icon,
@@ -62,50 +59,132 @@ interface UpdateWithAuthor extends Update {
     authorAvatar: string;
 }
 
-export default function EmployeeProjectDetailPage() {
-  const { id } = useParams();
-  const [project, setProject] = useState<ProjectSheetItem | null>(null);
-  const [team, setTeam] = useState<Employee[]>([]);
-  const [updates, setUpdates] = useState<UpdateWithAuthor[]>([]);
-  
-  useEffect(() => {
-    const foundProject = mockProjectData.find((p) => p.id === id);
-    if (foundProject) {
-      setProject(foundProject);
+const fetchProjectData = async (id: string) => {
+    const [projectRes, employeesRes, updatesRes] = await Promise.all([
+        fetch(`/api/admin/projects?id=${id}`),
+        fetch('/api/admin/employees'),
+        fetch('/api/admin/updates')
+    ]);
 
-      const assignedTeam = [
+    if (!projectRes.ok) {
+        throw new Error('Project not found');
+    }
+
+    const foundProject: ProjectSheetItem = await projectRes.json();
+    const allEmployees: Employee[] = await employeesRes.json();
+    const allUpdates: Update[] = await updatesRes.json();
+
+    const assignedTeam = [
         foundProject.leadAssignee,
         foundProject.projectLeader,
         foundProject.virtualAssistant,
         ...(foundProject.coders || []),
         ...(foundProject.freelancers || []),
-      ].filter((name): name is string => !!name);
+    ].filter((name): name is string => !!name);
 
-      const uniqueTeamNames = [...new Set(assignedTeam)];
+    const uniqueTeamNames = [...new Set(assignedTeam)];
 
-      const teamMembers = mockEmployeeData.filter((e) =>
+    const teamMembers = allEmployees.filter((e: Employee) =>
         uniqueTeamNames.includes(e.name)
-      );
-      setTeam(teamMembers);
+    );
+    
+    const projectUpdates = allUpdates
+        .filter((u: Update) => u.projectId === id)
+        .map((u: Update) => {
+            const author = allEmployees.find((e: Employee) => `user-${e.id.split('-')[1]}` === u.userId);
+            return {
+                ...u,
+                authorName: author?.name || 'Unknown User',
+                authorAvatar: `https://i.pravatar.cc/150?u=${author?.id}`
+            }
+        })
+        .sort((a: Update, b: Update) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-      async function fetchUpdates() {
-        const allUpdates = await getAllUpdates();
-        const projectUpdates = allUpdates
-            .filter(u => u.projectId === id)
-            .map(u => {
-                const author = mockEmployeeData.find(e => `user-${e.id.split('-')[1]}` === u.userId);
-                return {
-                    ...u,
-                    authorName: author?.name || 'Unknown User',
-                    authorAvatar: `https://i.pravatar.cc/150?u=${author?.id}`
-                }
-            })
-            .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setUpdates(projectUpdates);
-      }
-      fetchUpdates();
-    }
-  }, [id]);
+    return { project: foundProject, team: teamMembers, updates: projectUpdates };
+}
+
+const ProjectDetailSkeleton = () => (
+    <div className="p-4 sm:p-8">
+        <header className="mb-8">
+            <Skeleton className="h-9 w-3/4 mb-2" />
+            <Skeleton className="h-7 w-1/2" />
+        </header>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-8">
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-32" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-16 w-full" />
+                        <Separator className="my-6" />
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+                            {Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+                        </div>
+                        <Separator className="my-6" />
+                        <Skeleton className="h-8 w-full" />
+                    </CardContent>
+                </Card>
+                <Card>
+                     <CardHeader>
+                        <Skeleton className="h-6 w-40" />
+                        <Skeleton className="h-4 w-56" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-8">
+                            <Skeleton className="h-12 w-full" />
+                            <Skeleton className="h-12 w-full" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="space-y-8">
+                 <Card>
+                    <CardHeader>
+                       <Skeleton className="h-6 w-32" />
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <Skeleton className="h-10 w-full flex items-center gap-3">
+                            <Skeleton className="h-9 w-9 rounded-full" />
+                            <div className="space-y-1">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-3 w-16" />
+                            </div>
+                        </Skeleton>
+                         <Skeleton className="h-10 w-full flex items-center gap-3">
+                            <Skeleton className="h-9 w-9 rounded-full" />
+                            <div className="space-y-1">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-3 w-16" />
+                            </div>
+                        </Skeleton>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-20" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-9 w-full" />
+                        <Skeleton className="h-9 w-full" />
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    </div>
+);
+
+
+export default function EmployeeProjectDetailPage() {
+  const { id } = useParams();
+  
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['project', id],
+    queryFn: () => fetchProjectData(id as string),
+    enabled: !!id,
+  });
+
+  const { project, team, updates } = data || {};
 
   const nextMilestone = useMemo(() => {
     if (!project?.milestones) return null;
@@ -116,10 +195,11 @@ export default function EmployeeProjectDetailPage() {
   }, [project]);
 
 
-  if (!project) {
-    if (project === null) {
-      return <div className="p-8">Loading project details...</div>;
-    }
+  if (isLoading) {
+    return <ProjectDetailSkeleton />;
+  }
+
+  if (isError || !project) {
     return notFound();
   }
 
@@ -175,14 +255,14 @@ export default function EmployeeProjectDetailPage() {
             <Card className="mt-8">
                  <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <MilestoneIcon /> Recent Updates
+                      <MessageSquare /> Recent Updates
                     </CardTitle>
                     <CardDescription>A log of daily updates from the team.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="relative pl-6">
                         <div className="absolute left-[22px] top-0 h-full w-0.5 bg-border -translate-x-1/2"></div>
-                        {updates.length > 0 ? updates.map((item, index) => (
+                        {updates && updates.length > 0 ? updates.map((item, index) => (
                            <div key={index} className="mb-8 flex items-start gap-4">
                                 <Avatar className="z-10 h-10 w-10 border-2 border-primary">
                                     <AvatarImage src={item.authorAvatar} />
@@ -233,7 +313,7 @@ export default function EmployeeProjectDetailPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-4">
-                {team.map(member => (
+                {team && team.map(member => (
                     <li key={member.id} className="flex items-center gap-3">
                         <Avatar className="h-9 w-9">
                             <AvatarImage src={`https://i.pravatar.cc/150?u=${member.id}`} />

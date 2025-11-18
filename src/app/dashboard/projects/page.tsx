@@ -5,7 +5,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { FileText, Filter } from 'lucide-react';
 import type { ProjectSheetItem, Update } from '@/lib/definitions';
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 
 const filterOptions = [
   { value: 'all', label: 'All Projects' },
@@ -13,29 +16,46 @@ const filterOptions = [
   { value: 'high-priority', label: 'High Priority' },
 ];
 
+const fetchProjects = async (): Promise<ProjectSheetItem[]> => {
+    const res = await fetch('/api/projects');
+    if (!res.ok) throw new Error('Failed to fetch projects');
+    return res.json();
+}
+
+const fetchTodaysUpdates = async (): Promise<Update[]> => {
+    const res = await fetch('/api/updates/today');
+    if (!res.ok) throw new Error('Failed to fetch todays updates');
+    return res.json();
+}
+
+const ProjectCardSkeleton = () => (
+    <Card className="flex h-full flex-col">
+        <CardHeader>
+            <Skeleton className="h-5 w-3/4 mb-2" />
+            <Skeleton className="h-4 w-1/2" />
+        </CardHeader>
+        <CardContent>
+            <Skeleton className="h-6 w-20 rounded-full" />
+        </CardContent>
+        <CardFooter className="flex items-center justify-between rounded-b-lg bg-muted/50 p-4">
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-9 w-28" />
+        </CardFooter>
+    </Card>
+);
+
 export default function DashboardProjectsPage() {
-  const [projects, setProjects] = useState<ProjectSheetItem[]>([]);
-  const [todaysUpdates, setTodaysUpdates] = useState<Update[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
 
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      const [projectsRes, updatesRes] = await Promise.all([
-        fetch('/api/projects'),
-        fetch('/api/updates/today')
-      ]);
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery<ProjectSheetItem[]>({
+    queryKey: ['projects'],
+    queryFn: fetchProjects
+  });
 
-      const userProjects: ProjectSheetItem[] = await projectsRes.json();
-      const updates: Update[] = await updatesRes.json();
-
-      setProjects(userProjects);
-      setTodaysUpdates(updates);
-      setLoading(false);
-    }
-    fetchData();
-  }, []);
+  const { data: todaysUpdates = [], isLoading: isLoadingUpdates } = useQuery<Update[]>({
+    queryKey: ['todaysUpdates'],
+    queryFn: fetchTodaysUpdates
+  });
 
   const filteredProjects = useMemo(() => {
     let filtered = projects;
@@ -58,10 +78,7 @@ export default function DashboardProjectsPage() {
       });
   }, [projects, todaysUpdates, activeFilter]);
   
-
-  if (loading) {
-    return <div className="p-6">Loading projects...</div>;
-  }
+  const isLoading = isLoadingProjects || isLoadingUpdates;
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
@@ -85,7 +102,11 @@ export default function DashboardProjectsPage() {
             ))}
         </div>
       </div>
-      {filteredProjects.length > 0 ? (
+      {isLoading ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({length: 4}).map((_, i) => <ProjectCardSkeleton key={i} />)}
+          </div>
+      ) : filteredProjects.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProjects.map((project) => (
             <ProjectCard key={project.id} project={project} />

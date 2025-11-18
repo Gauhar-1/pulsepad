@@ -11,26 +11,55 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CheckCircle, Clock, Github, Link as LinkIcon, Mail, Phone } from 'lucide-react';
 import Link from 'next/link';
-import { mockProjectData } from '@/lib/mock-data';
+import { ProjectSheetItem } from '@/lib/definitions';
+import { useQuery } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const fetchProjects = async (): Promise<ProjectSheetItem[]> => {
+    const res = await fetch('/api/admin/projects');
+    if (!res.ok) throw new Error('Failed to fetch projects');
+    return res.json();
+}
+
+const ClientReportSkeleton = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Clock /> Project Timeline & Milestones
+        </CardTitle>
+        <CardDescription>
+          An overview of your project's progress and key dates.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+          <div className="relative pl-6">
+              <div className="absolute left-[30px] h-full w-0.5 bg-border -translate-x-1/2"></div>
+              {Array.from({length: 4}).map((_, i) => (
+                  <div key={i} className="mb-8 flex items-center gap-6">
+                      <Skeleton className="z-10 h-8 w-8 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                          <Skeleton className="h-5 w-1/2" />
+                          <Skeleton className="h-4 w-1/3" />
+                      </div>
+                  </div>
+              ))}
+          </div>
+      </CardContent>
+    </Card>
+);
 
 const ClientReport = () => {
-  const milestones = [
-    { id: 1, name: 'Project Kick-off', date: '2024-07-01', status: 'completed' },
-    {
-      id: 2,
-      name: 'Design Phase Complete',
-      date: '2024-07-15',
-      status: 'completed',
-    },
-    {
-      id: 3,
-      name: 'Development Sprint 1',
-      date: '2024-07-30',
-      status: 'in-progress',
-    },
-    { id: 4, name: 'User Testing', date: '2024-08-15', status: 'upcoming' },
-    { id: 5, name: 'Project Launch', date: '2024-09-01', status: 'upcoming' },
-  ];
+  // We'll just show the first project's milestones for demo purposes
+  const { data: projects, isLoading } = useQuery<ProjectSheetItem[]>({
+    queryKey: ['projects'],
+    queryFn: fetchProjects
+  });
+
+  if (isLoading || !projects) return <ClientReportSkeleton />;
+
+  const milestones = projects[0]?.milestones || [];
+  const sortedMilestones = [...milestones].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
 
   return (
     <Card>
@@ -45,7 +74,7 @@ const ClientReport = () => {
       <CardContent>
         <div className="relative pl-6">
           <div className="absolute left-[30px] h-full w-0.5 bg-border -translate-x-1/2"></div>
-          {milestones.map((milestone, index) => (
+          {sortedMilestones.map((milestone) => (
             <div key={milestone.id} className="mb-8 flex items-center gap-6">
               <div className="z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background">
                 {milestone.status === 'completed' ? (
@@ -53,8 +82,8 @@ const ClientReport = () => {
                 ) : (
                   <Clock
                     className={`h-6 w-6 ${
-                      milestone.status === 'in-progress'
-                        ? 'text-blue-500 animate-spin'
+                      new Date(milestone.date) < new Date() && milestone.status === 'upcoming'
+                        ? 'text-yellow-500'
                         : 'text-muted-foreground'
                     }`}
                   />
@@ -79,8 +108,23 @@ const ClientReport = () => {
 };
 
 const ProjectLinks = () => {
+    const { data: projects, isLoading } = useQuery<ProjectSheetItem[]>({
+        queryKey: ['projects'],
+        queryFn: fetchProjects
+    });
+
+    if (isLoading || !projects) return (
+        <Card>
+            <CardHeader><CardTitle>Project Files & Links</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </CardContent>
+        </Card>
+    );
+
     // Assuming the client is associated with the first project for this example
-    const project = mockProjectData[0];
+    const project = projects[0];
     const links = [
         { href: project.githubLink, icon: Github, label: 'GitHub Repository' },
         { href: project.loomLink, icon: LinkIcon, label: 'Loom Videos' },
