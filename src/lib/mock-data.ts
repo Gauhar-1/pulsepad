@@ -327,20 +327,42 @@ export const mockNotifications = [
 export const mockAssessmentTemplates: AssessmentTemplate[] = [
     {
         id: 'template-001',
-        name: 'Daily Punctuality & Availability',
+        name: 'Daily Self-Assessment',
         checklist: [
-            { id: 'chk-1', text: 'Was available on WhatsApp at 9 AM?', weight: 1 },
-            { id: 'chk-2', text: 'Was available on WhatsApp at 11 AM?', weight: 1 },
-            { id: 'chk-3', text: 'Was available on WhatsApp at 2 PM?', weight: 1 },
-            { id: 'chk-4', text: 'Was available on WhatsApp at 4 PM?', weight: 1 },
-        ]
-    },
-    {
-        id: 'template-002',
-        name: 'End of Day Report',
-        checklist: [
-            { id: 'chk-5', text: 'Submitted EOD report before 6 PM?', weight: 2 },
-            { id: 'chk-6', text: 'Report was detailed and clear?', weight: 1 },
+            { id: 'task-1', text: 'Attended morning session', weight: 1 },
+            { id: 'task-2', text: 'Came on time', weight: 1 },
+            { id: 'task-3', text: 'Worked on my project', weight: 1 },
+            { id: 'task-4', text: 'Asked senior team for new Project', weight: 1 },
+            { id: 'task-5', text: 'Got code corrected', weight: 1 },
+            { id: 'task-6', text: 'Updated client', weight: 1 },
+            { id: 'task-7', text: 'Worked on training task', weight: 1 },
+            { id: 'task-8', text: 'Updated Senior Team', weight: 1 },
+            { id: 'task-9', text: 'Updated Daily Progress', weight: 1 },
+            { id: 'task-10', text: 'Plan Next day\'s task', weight: 1 },
+            { id: 'task-11', text: 'Completed all task for the day', weight: 1 },
+            { id: 'task-12', text: 'Worked on more than 1 project (if assigned)', weight: 1 },
+            { id: 'task-13', text: 'Tasks for the day', weight: 1 },
+            { id: 'task-14', text: 'Did you inform you are not able to do the project ?', weight: 1 },
+            { id: 'task-15', text: 'Did you made sure project was given to someone else ?', weight: 1 },
+            { id: 'task-16', text: 'DId you made sure project was on time ?', weight: 1 },
+            { id: 'task-17', text: 'Did you inform before bunking the day before ?', weight: 1 },
+            { id: 'task-18', text: 'Did you inform before coming late ?', weight: 1 },
+            { id: 'task-19', text: 'Did you inform when you left the meeting ?', weight: 1 },
+            { id: 'task-20', text: 'Is freelancer needed for this project ?', weight: 1 },
+            { id: 'task-21', text: 'Did you made sure freelancer was hired ?', weight: 1 },
+            { id: 'task-22', text: 'Did you made sure you have been added to client\'s WhatsApp group on the same day ?', weight: 1 },
+            { id: 'task-23', text: 'Has the slack group made for this project ?', weight: 1 },
+            { id: 'task-24', text: 'Check if it has been assigned to somebody else already ?', weight: 1 },
+            { id: 'task-25', text: 'Choose your own supervisor', weight: 1 },
+            { id: 'task-26', text: 'Check if the project assigned is still on and in priority', weight: 1 },
+            { id: 'task-27', text: 'Have you taken follow up from the client?', weight: 1 },
+            { id: 'task-28', text: 'Have you made all the tasks for the project?', weight: 1 },
+            { id: 'task-29', text: 'Did you assign deadlines for each task?', weight: 1 },
+            { id: 'task-30', text: 'Did you record all the relavent loom videos', weight: 1 },
+            { id: 'task-31', text: 'Did you record organize loom videos', weight: 1 },
+            { id: 'task-32', text: 'Was deadline followed?', weight: 1 },
+            { id: 'task-33', text: 'Were you screensharing and working at all times?', weight: 1 },
+            { id: 'task-34', text: 'No. of hours attended today', weight: 1 },
         ]
     }
 ];
@@ -353,10 +375,10 @@ export const mockDailyAssessments: DailyAssessment[] = [
         date: formatISO(now, { representation: 'date' }),
         status: 'SUBMITTED',
         responses: [
-            { checklistItemId: 'chk-1', answer: true },
-            { checklistItemId: 'chk-2', answer: true },
-            { checklistItemId: 'chk-3', answer: false },
-            { checklistItemId: 'chk-4', answer: true },
+            { checklistItemId: 'task-1', answer: true },
+            { checklistItemId: 'task-2', answer: true },
+            { checklistItemId: 'task-3', answer: false },
+            { checklistItemId: 'task-4', answer: true },
         ],
     },
     {
@@ -366,36 +388,36 @@ export const mockDailyAssessments: DailyAssessment[] = [
         date: formatISO(now, { representation: 'date' }),
         status: 'SUBMITTED',
         responses: [
-            { checklistItemId: 'chk-1', answer: true },
-            { checklistItemId: 'chk-2', answer: true },
-            { checklistItemId: 'chk-3', answer: true },
-            { checklistItemId: 'chk-4', answer: true },
+            { checklistItemId: 'task-1', answer: true },
+            { checklistItemId: 'task-2', answer: true },
+            { checklistItemId: 'task-3', answer: true },
+            { checklistItemId: 'task-4', answer: true },
         ],
     },
     {
         id: 'assess-003',
         employeeId: 'emp-006',
-        templateId: 'template-002',
+        templateId: 'template-001',
         date: formatISO(subDays(now, 1), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-5', answer: true },
-            { checklistItemId: 'chk-6', answer: false },
+            { checklistItemId: 'task-5', answer: true },
+            { checklistItemId: 'task-6', answer: false },
         ],
         adminCorrections: [
-            { checklistItemId: 'chk-6', correctedAnswer: true }
+            { checklistItemId: 'task-6', correctedAnswer: true }
         ],
         finalScore: 0.5
     },
     {
         id: 'assess-005',
         employeeId: 'emp-002',
-        templateId: 'template-002',
+        templateId: 'template-001',
         date: formatISO(subDays(now, 2), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-5', answer: true },
-            { checklistItemId: 'chk-6', answer: true },
+            { checklistItemId: 'task-5', answer: true },
+            { checklistItemId: 'task-6', answer: true },
         ],
         finalScore: 1
     },
@@ -406,10 +428,10 @@ export const mockDailyAssessments: DailyAssessment[] = [
         date: formatISO(subDays(now, 2), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-1', answer: true },
-            { checklistItemId: 'chk-2', answer: true },
-            { checklistItemId: 'chk-3', answer: true },
-            { checklistItemId: 'chk-4', answer: true },
+            { checklistItemId: 'task-1', answer: true },
+            { checklistItemId: 'task-2', answer: true },
+            { checklistItemId: 'task-3', answer: true },
+            { checklistItemId: 'task-4', answer: true },
         ],
         finalScore: 1
     },
@@ -420,22 +442,22 @@ export const mockDailyAssessments: DailyAssessment[] = [
         date: formatISO(subDays(now, 3), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-1', answer: false },
-            { checklistItemId: 'chk-2', answer: true },
-            { checklistItemId: 'chk-3', answer: true },
-            { checklistItemId: 'chk-4', answer: false },
+            { checklistItemId: 'task-1', answer: false },
+            { checklistItemId: 'task-2', answer: true },
+            { checklistItemId: 'task-3', answer: true },
+            { checklistItemId: 'task-4', answer: false },
         ],
         finalScore: 0.5
     },
     {
         id: 'assess-008',
         employeeId: 'emp-009',
-        templateId: 'template-002',
+        templateId: 'template-001',
         date: formatISO(subDays(now, 3), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-5', answer: true },
-            { checklistItemId: 'chk-6', answer: true },
+            { checklistItemId: 'task-5', answer: true },
+            { checklistItemId: 'task-6', answer: true },
         ],
         finalScore: 1
     },
@@ -443,12 +465,12 @@ export const mockDailyAssessments: DailyAssessment[] = [
     {
         id: 'assess-009',
         employeeId: 'emp-001',
-        templateId: 'template-002',
+        templateId: 'template-001',
         date: formatISO(subDays(now, 4), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-5', answer: true },
-            { checklistItemId: 'chk-6', answer: true },
+            { checklistItemId: 'task-5', answer: true },
+            { checklistItemId: 'task-6', answer: true },
         ],
         finalScore: 1
     },
@@ -459,10 +481,10 @@ export const mockDailyAssessments: DailyAssessment[] = [
         date: formatISO(subDays(now, 2), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-1', answer: true },
-            { checklistItemId: 'chk-2', answer: false },
-            { checklistItemId: 'chk-3', answer: true },
-            { checklistItemId: 'chk-4', answer: true },
+            { checklistItemId: 'task-1', answer: true },
+            { checklistItemId: 'task-2', answer: false },
+            { checklistItemId: 'task-3', answer: true },
+            { checklistItemId: 'task-4', answer: true },
         ],
         finalScore: 0.75
     },
@@ -473,22 +495,22 @@ export const mockDailyAssessments: DailyAssessment[] = [
         date: formatISO(subDays(now, 3), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-1', answer: true },
-            { checklistItemId: 'chk-2', answer: true },
-            { checklistItemId: 'chk-3', answer: true },
-            { checklistItemId: 'chk-4', answer: true },
+            { checklistItemId: 'task-1', answer: true },
+            { checklistItemId: 'task-2', answer: true },
+            { checklistItemId: 'task-3', answer: true },
+            { checklistItemId: 'task-4', answer: true },
         ],
         finalScore: 1
     },
     {
         id: 'assess-012',
         employeeId: 'emp-007',
-        templateId: 'template-002',
+        templateId: 'template-001',
         date: formatISO(subDays(now, 1), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-5', answer: false },
-            { checklistItemId: 'chk-6', answer: false },
+            { checklistItemId: 'task-5', answer: false },
+            { checklistItemId: 'task-6', answer: false },
         ],
         finalScore: 0
     },
@@ -499,10 +521,10 @@ export const mockDailyAssessments: DailyAssessment[] = [
         date: formatISO(subDays(now, 4), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-1', answer: true },
-            { checklistItemId: 'chk-2', answer: true },
-            { checklistItemId: 'chk-3', answer: true },
-            { checklistItemId: 'chk-4', answer: false },
+            { checklistItemId: 'task-1', answer: true },
+            { checklistItemId: 'task-2', answer: true },
+            { checklistItemId: 'task-3', answer: true },
+            { checklistItemId: 'task-4', answer: false },
         ],
         finalScore: 0.75
     },
@@ -513,22 +535,22 @@ export const mockDailyAssessments: DailyAssessment[] = [
         date: formatISO(subDays(now, 2), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-1', answer: true },
-            { checklistItemId: 'chk-2', answer: true },
-            { checklistItemId: 'chk-3', answer: true },
-            { checklistItemId: 'chk-4', answer: true },
+            { checklistItemId: 'task-1', answer: true },
+            { checklistItemId: 'task-2', answer: true },
+            { checklistItemId: 'task-3', answer: true },
+            { checklistItemId: 'task-4', answer: true },
         ],
         finalScore: 1
     },
     {
         id: 'assess-015',
         employeeId: 'emp-012',
-        templateId: 'template-002',
+        templateId: 'template-001',
         date: formatISO(subDays(now, 1), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-5', answer: true },
-            { checklistItemId: 'chk-6', answer: true },
+            { checklistItemId: 'task-5', answer: true },
+            { checklistItemId: 'task-6', answer: true },
         ],
         finalScore: 1
     },
@@ -539,10 +561,10 @@ export const mockDailyAssessments: DailyAssessment[] = [
         date: formatISO(subDays(now, 5), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-1', answer: true },
-            { checklistItemId: 'chk-2', answer: false },
-            { checklistItemId: 'chk-3', answer: false },
-            { checklistItemId: 'chk-4', answer: true },
+            { checklistItemId: 'task-1', answer: true },
+            { checklistItemId: 'task-2', answer: false },
+            { checklistItemId: 'task-3', answer: false },
+            { checklistItemId: 'task-4', answer: true },
         ],
         finalScore: 0.5
     },
@@ -553,22 +575,22 @@ export const mockDailyAssessments: DailyAssessment[] = [
         date: formatISO(subDays(now, 3), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-1', answer: true },
-            { checklistItemId: 'chk-2', answer: true },
-            { checklistItemId: 'chk-3', answer: true },
-            { checklistItemId: 'chk-4', answer: true },
+            { checklistItemId: 'task-1', answer: true },
+            { checklistItemId: 'task-2', answer: true },
+            { checklistItemId: 'task-3', answer: true },
+            { checklistItemId: 'task-4', answer: true },
         ],
         finalScore: 1
     },
     {
         id: 'assess-018',
         employeeId: 'emp-015',
-        templateId: 'template-002',
+        templateId: 'template-001',
         date: formatISO(subDays(now, 2), { representation: 'date' }),
         status: 'VALIDATED',
         responses: [
-            { checklistItemId: 'chk-5', answer: true },
-            { checklistItemId: 'chk-6', answer: false },
+            { checklistItemId: 'task-5', answer: true },
+            { checklistItemId: 'task-6', answer: false },
         ],
         finalScore: 0.66
     },
