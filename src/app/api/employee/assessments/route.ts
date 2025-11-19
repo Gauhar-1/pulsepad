@@ -4,16 +4,19 @@ import {
   mockAssessmentTemplates,
 } from '@/lib/mock-data';
 import { NextResponse } from 'next/server';
+import { isToday, parseISO } from 'date-fns';
 
 export async function GET() {
   // In a real app, you would filter by the logged-in user's ID
-  // For this mock, we'll return all assessments related to user 'emp-001'
+  // For this mock, we'll return the assessment for user 'emp-001' for today
   const userId = 'emp-001';
-  const userAssessments = mockDailyAssessments.filter(
-    (a) => a.employeeId === userId
+  const todaysAssessment = mockDailyAssessments.find(
+    (a) => a.employeeId === userId && isToday(parseISO(a.date))
   );
 
-  const templateIds = new Set(userAssessments.map((a) => a.templateId));
+  const assessments = todaysAssessment ? [todaysAssessment] : [];
+  
+  const templateIds = new Set(assessments.map((a) => a.templateId));
   const relevantTemplates = mockAssessmentTemplates.filter((t) =>
     templateIds.has(t.id)
   );
@@ -22,7 +25,7 @@ export async function GET() {
   await new Promise((resolve) => setTimeout(resolve, 800));
 
   return NextResponse.json({
-    assessments: userAssessments,
+    assessments: assessments,
     templates: relevantTemplates,
   });
 }
