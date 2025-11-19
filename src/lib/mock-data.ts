@@ -1,5 +1,5 @@
 
-import type { Employee, ProjectSheetItem, TrainingTask, Update } from '@/lib/definitions';
+import type { Employee, ProjectSheetItem, TrainingTask, Update, AssessmentTemplate, DailyAssessment } from '@/lib/definitions';
 import { addDays, addMonths, formatISO, subDays } from 'date-fns';
 
 const now = new Date();
@@ -322,4 +322,77 @@ export const mockNotifications = [
         timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
         read: true,
     },
+];
+
+export const mockAssessmentTemplates: AssessmentTemplate[] = [
+    {
+        id: 'template-001',
+        name: 'Daily Punctuality & Availability',
+        checklist: [
+            { id: 'chk-1', text: 'Was available on WhatsApp at 9 AM?', weight: 1 },
+            { id: 'chk-2', text: 'Was available on WhatsApp at 11 AM?', weight: 1 },
+            { id: 'chk-3', text: 'Was available on WhatsApp at 2 PM?', weight: 1 },
+            { id: 'chk-4', text: 'Was available on WhatsApp at 4 PM?', weight: 1 },
+        ]
+    },
+    {
+        id: 'template-002',
+        name: 'End of Day Report',
+        checklist: [
+            { id: 'chk-5', text: 'Submitted EOD report before 6 PM?', weight: 2 },
+            { id: 'chk-6', text: 'Report was detailed and clear?', weight: 1 },
+        ]
+    }
+];
+
+export const mockDailyAssessments: DailyAssessment[] = [
+    {
+        id: 'assess-001',
+        employeeId: 'emp-001',
+        templateId: 'template-001',
+        date: formatISO(subDays(now, 1), { representation: 'date' }),
+        status: 'SUBMITTED',
+        responses: [
+            { checklistItemId: 'chk-1', answer: true },
+            { checklistItemId: 'chk-2', answer: true },
+            { checklistItemId: 'chk-3', answer: false },
+            { checklistItemId: 'chk-4', answer: true },
+        ],
+    },
+    {
+        id: 'assess-002',
+        employeeId: 'emp-002',
+        templateId: 'template-001',
+        date: formatISO(subDays(now, 1), { representation: 'date' }),
+        status: 'SUBMITTED',
+        responses: [
+            { checklistItemId: 'chk-1', answer: true },
+            { checklistItemId: 'chk-2', answer: true },
+            { checklistItemId: 'chk-3', answer: true },
+            { checklistItemId: 'chk-4', answer: true },
+        ],
+    },
+    {
+        id: 'assess-003',
+        employeeId: 'emp-006',
+        templateId: 'template-002',
+        date: formatISO(subDays(now, 1), { representation: 'date' }),
+        status: 'VALIDATED',
+        responses: [
+            { checklistItemId: 'chk-5', answer: true },
+            { checklistItemId: 'chk-6', answer: false },
+        ],
+        adminCorrections: [
+            { checklistItemId: 'chk-6', correctedAnswer: true }
+        ],
+        finalScore: 0.5
+    },
+    {
+        id: 'assess-004',
+        employeeId: 'emp-001',
+        templateId: 'template-001',
+        date: formatISO(now, { representation: 'date' }),
+        status: 'ASSIGNED',
+        responses: [],
+    }
 ];

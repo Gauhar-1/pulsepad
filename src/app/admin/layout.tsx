@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { User } from '@/lib/definitions';
 import { Logo } from '@/components/logo';
-import { LogOut, FolderKanban, Users, UserPlus, Bot, History, BookOpen, TrendingUp } from 'lucide-react';
+import { LogOut, FolderKanban, Users, UserPlus, Bot, History, BookOpen, CheckCheck } from 'lucide-react';
 import Link from 'next/link';
 import {
   SidebarProvider,
@@ -43,7 +43,7 @@ const adminNavItems = [
   { href: '/admin/employees', icon: Users, label: 'Employees' },
   { href: '/admin/candidates', icon: UserPlus, label: 'Candidates' },
   { href: '/admin/training', icon: BookOpen, label: 'Training' },
-  { href: '/admin/performance', icon: TrendingUp, label: 'Performance' },
+  { href: '/admin/assessments', icon: CheckCheck, label: 'Assessments' },
   { href: '/admin/automation', icon: Bot, label: 'Automation' },
   { href: '/admin/audit-logs', icon: History, label: 'Audit Logs' },
 ];

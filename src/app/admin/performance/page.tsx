@@ -5,191 +5,251 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
-    CardDescription
+    CardDescription,
+    CardFooter
 } from '@/components/ui/card';
-import { TrendingUp, ListChecks, Activity, Users, Clock, CheckCircle, BarChartHorizontal } from 'lucide-react';
+import { CheckCheck, Send, User, ChevronDown, Check, Circle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { ProjectSheetItem, Update, Employee } from '@/lib/definitions';
+import { Employee, DailyAssessment, AssessmentTemplate } from '@/lib/definitions';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatDistanceToNow } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
-const fetchProjects = async (): Promise<ProjectSheetItem[]> => {
-    const res = await fetch('/api/admin/projects');
-    if (!res.ok) throw new Error('Failed to fetch projects');
-    return res.json();
-}
-const fetchUpdates = async (): Promise<Update[]> => {
-    const res = await fetch('/api/admin/updates');
-    if (!res.ok) throw new Error('Failed to fetch updates');
-    return res.json();
-}
 const fetchEmployees = async (): Promise<Employee[]> => {
     const res = await fetch('/api/admin/employees');
     if (!res.ok) throw new Error('Failed to fetch employees');
     return res.json();
 }
-
-interface CombinedData {
-    projects: ProjectSheetItem[];
-    updates: Update[];
-    employees: Employee[];
+const fetchAssessmentsData = async (): Promise<{assessments: DailyAssessment[], templates: AssessmentTemplate[]}> => {
+    const res = await fetch('/api/admin/assessments');
+    if (!res.ok) throw new Error('Failed to fetch assessments');
+    return res.json();
 }
 
-const StatCard = ({ title, value, icon: Icon, isLoading }: { title: string, value: string | number, icon: React.ElementType, isLoading: boolean }) => (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
-            <Icon className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-            {isLoading ? (
-                 <Skeleton className="h-8 w-1/2" />
-            ) : (
-                <div className="text-2xl font-bold">{value}</div>
-            )}
-        </CardContent>
-    </Card>
-);
+interface CombinedData {
+    employees: Employee[];
+    assessments: DailyAssessment[];
+    templates: AssessmentTemplate[];
+}
 
-const chartConfig = {
-  count: {
-    label: 'Projects',
-    color: 'hsl(var(--chart-1))',
-  },
-} satisfies ChartConfig;
+const statusVariant: { [key: string]: 'default' | 'secondary' | 'outline' | 'destructive' } = {
+  SUBMITTED: 'secondary',
+  VALIDATED: 'default',
+  ASSIGNED: 'outline',
+};
 
-export default function AdminPerformancePage() {
+const statusIcon = {
+  SUBMITTED: Circle,
+  VALIDATED: Check,
+  ASSIGNED: Circle,
+};
+
+const statusColor = {
+  SUBMITTED: 'text-blue-500',
+  VALIDATED: 'text-green-500',
+  ASSIGNED: 'text-muted-foreground',
+};
+
+
+export default function AdminAssessmentsPage() {
+    const [selectedSubmission, setSelectedSubmission] = useState<DailyAssessment | null>(null);
 
     const { data, isLoading } = useQuery<CombinedData>({
-        queryKey: ['admin-performance'],
+        queryKey: ['admin-assessments'],
         queryFn: async () => {
-            const [projects, updates, employees] = await Promise.all([
-                fetchProjects(),
-                fetchUpdates(),
-                fetchEmployees()
+            const [employees, {assessments, templates}] = await Promise.all([
+                fetchEmployees(),
+                fetchAssessmentsData()
             ]);
-            return { projects, updates, employees };
+            return { employees, assessments, templates };
         }
     });
 
-    const { projects = [], updates = [], employees = [] } = data || {};
+    const { employees = [], assessments = [], templates = [] } = data || {};
+    
+    const submittedAssessments = assessments.filter(a => a.status === 'SUBMITTED');
 
-    const activeProjects = projects.filter(p => p.status === 'Active').length;
-    const completedProjects = projects.filter(p => p.status === 'Completed').length;
-    const overdueProjects = projects.filter(p => new Date(p.endDate) < new Date() && p.status !== 'Completed').length;
-    const activeEmployees = employees.filter(e => e.active).length;
+    const getEmployeeName = (id: string) => employees.find(e => e.id === id)?.name || 'Unknown';
 
-    const projectStatusData = projects.reduce((acc, project) => {
-        const status = project.status;
-        const existing = acc.find(item => item.status === status);
-        if (existing) {
-            existing.count++;
-        } else {
-            acc.push({ status, count: 1 });
-        }
-        return acc;
-    }, [] as { status: string, count: number }[]);
+    if (selectedSubmission) {
+      const template = templates.find(t => t.id === selectedSubmission.templateId);
+      if (!template) return <p>Template not found</p>;
 
-     const recentUpdates = updates
-        .slice(0, 5)
-        .map(update => {
-            const author = employees.find(e => `user-${e.id.split('-')[1]}` === update.userId);
-            const project = projects.find(p => p.id === update.projectId);
-            return {
-                ...update,
-                authorName: author?.name || 'N/A',
-                authorAvatar: `https://i.pravatar.cc/150?u=${author?.id}`,
-                projectName: project?.projectTitle || 'N/A',
-            };
-        });
+      return (
+        <div className="admin-dashboard-gradient min-h-screen p-4 sm:p-8">
+            <header className="mb-8">
+                <Button variant="outline" onClick={() => setSelectedSubmission(null)}>
+                    Back to Validation Dashboard
+                </Button>
+                <h1 className="text-2xl font-bold mt-4">Validate Submission</h1>
+                <p className="text-muted-foreground">
+                    Employee: {getEmployeeName(selectedSubmission.employeeId)} | Template: {template.name}
+                </p>
+            </header>
+            <main>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Grading Interface</CardTitle>
+                        <CardDescription>Review the employee's responses and make corrections if necessary.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-6">
+                            {template.checklist.map(item => {
+                                const response = selectedSubmission.responses.find(r => r.checklistItemId === item.id);
+                                return (
+                                <div key={item.id} className="grid grid-cols-3 items-center gap-4 p-4 border rounded-lg">
+                                    <p className="col-span-1">{item.text}</p>
+                                    <div className="col-span-1 flex items-center gap-2">
+                                        <span>Employee says:</span>
+                                        <Badge variant={response?.answer ? 'default' : 'destructive'}>
+                                            {response?.answer ? 'YES' : 'NO'}
+                                        </Badge>
+                                    </div>
+                                    <div className="col-span-1 flex items-center justify-end gap-4">
+                                        <Label htmlFor={`correction-${item.id}`}>Admin Agrees:</Label>
+                                        <Switch id={`correction-${item.id}`} defaultChecked={true} />
+                                    </div>
+                                </div>
+                                )
+                            })}
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button className="ml-auto">Save & Calculate Score</Button>
+                    </CardFooter>
+                </Card>
+            </main>
+        </div>
+      )
+    }
 
     return (
         <div className="admin-dashboard-gradient min-h-screen p-4 sm:p-8">
             <header className="mb-8 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <TrendingUp className="h-8 w-8 text-primary"/>
+                    <CheckCheck className="h-8 w-8 text-primary"/>
                     <div>
-                        <h1 className="text-2xl font-bold">Performance Dashboard</h1>
-                        <p className="text-muted-foreground">An overview of project and team performance.</p>
+                        <h1 className="text-2xl font-bold">Assessments</h1>
+                        <p className="text-muted-foreground">Assign daily tasks and validate employee submissions.</p>
                     </div>
                 </div>
             </header>
 
-            <main className="grid gap-8">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <StatCard title="Active Projects" value={activeProjects} icon={Activity} isLoading={isLoading} />
-                    <StatCard title="Completed This Month" value={completedProjects} icon={CheckCircle} isLoading={isLoading} />
-                    <StatCard title="Overdue Projects" value={overdueProjects} icon={Clock} isLoading={isLoading} />
-                    <StatCard title="Active Employees" value={activeEmployees} icon={Users} isLoading={isLoading} />
-                </div>
-                
-                <div className="grid gap-8 md:grid-cols-2">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><BarChartHorizontal /> Project Status Distribution</CardTitle>
-                            <CardDescription>A look at the current status of all projects.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                           {isLoading ? <Skeleton className="h-[300px] w-full" /> : (
-                               <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <BarChart data={projectStatusData} layout="vertical">
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis type="number" />
-                                            <YAxis dataKey="status" type="category" width={150} tick={{ fontSize: 12 }} />
-                                            <ChartTooltip content={<ChartTooltipContent />} />
-                                            <Bar dataKey="count" fill="var(--color-count)" radius={4} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </ChartContainer>
-                           )}
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><ListChecks /> Recent Activity</CardTitle>
-                            <CardDescription>Latest updates submitted by the team.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {isLoading ? (
-                                <div className="space-y-4">
-                                    {Array.from({length: 5}).map((_, i) => (
-                                        <div key={i} className="flex items-center gap-3">
-                                            <Skeleton className="h-10 w-10 rounded-full" />
-                                            <div className="space-y-1">
-                                                <Skeleton className="h-4 w-48" />
-                                                <Skeleton className="h-3 w-32" />
-                                            </div>
-                                        </div>
-                                    ))}
+            <main>
+                 <Card className="rounded-2xl shadow-lg">
+                    <CardHeader>
+                        <CardTitle>Assignment & Validation</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Tabs defaultValue="validation">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="assignment">Assignment Manager</TabsTrigger>
+                                <TabsTrigger value="validation">Validation Dashboard</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="assignment" className="mt-6">
+                                <div className="grid gap-6 max-w-2xl mx-auto">
+                                     <div className="space-y-2">
+                                        <Label>1. Select Master Template</Label>
+                                        <Select>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a template..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {templates.map(template => (
+                                                    <SelectItem key={template.id} value={template.id}>{template.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>2. Select Employee</Label>
+                                        <Select>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select an employee..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Employees</SelectItem>
+                                                {employees.map(employee => (
+                                                    <SelectItem key={employee.id} value={employee.id}>{employee.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <Button size="lg">
+                                        <Send className="mr-2 h-4 w-4" /> Assign for Today
+                                    </Button>
                                 </div>
-                            ) : (
-                                <ul className="space-y-4">
-                                {recentUpdates.map(update => (
-                                    <li key={update.id} className="flex items-center gap-3">
-                                        <Avatar className="h-10 w-10">
-                                            <AvatarImage src={update.authorAvatar} />
-                                            <AvatarFallback>{update.authorName.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <p className="text-sm font-medium leading-none">{update.content}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {update.authorName} on {update.projectName} - {formatDistanceToNow(new Date(update.createdAt), { addSuffix: true })}
-                                            </p>
-                                        </div>
-                                    </li>
-                                ))}
-                                </ul>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-
+                            </TabsContent>
+                            <TabsContent value="validation" className="mt-6">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Pending Submissions</CardTitle>
+                                        <CardDescription>Review and validate assessments submitted by employees.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {isLoading ? <Skeleton className="h-40 w-full" /> : (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Employee</TableHead>
+                                                    <TableHead>Assessment</TableHead>
+                                                    <TableHead>Date</TableHead>
+                                                    <TableHead>Status</TableHead>
+                                                    <TableHead><span className="sr-only">Actions</span></TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {submittedAssessments.map(item => {
+                                                    const template = templates.find(t => t.id === item.templateId);
+                                                    const Icon = statusIcon[item.status];
+                                                    return (
+                                                    <TableRow key={item.id}>
+                                                        <TableCell>{getEmployeeName(item.employeeId)}</TableCell>
+                                                        <TableCell>{template?.name}</TableCell>
+                                                        <TableCell>{item.date}</TableCell>
+                                                        <TableCell>
+                                                            <Badge variant={statusVariant[item.status]} className="flex items-center gap-2">
+                                                                <Icon className={`h-3 w-3 ${statusColor[item.status]}`} />
+                                                                <span>{item.status}</span>
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Button variant="outline" onClick={() => setSelectedSubmission(item)}>
+                                                                Validate
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                    )
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                        </Tabs>
+                    </CardContent>
+                </Card>
             </main>
         </div>
     );
 }
-

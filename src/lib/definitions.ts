@@ -91,3 +91,30 @@ export type TrainingTask = {
     assignedTo: string[]; // employee ids
     trainerId: string; // employee id
 }
+
+export type AssessmentTemplate = {
+  id: string;
+  name: string;
+  checklist: {
+    id: string;
+    text: string;
+    weight: number;
+  }[];
+};
+
+export type DailyAssessment = {
+  id: string;
+  employeeId: string;
+  templateId: string;
+  date: string; // ISO Date
+  status: 'ASSIGNED' | 'SUBMITTED' | 'VALIDATED';
+  responses: {
+    checklistItemId: string;
+    answer: boolean;
+  }[];
+  adminCorrections?: {
+    checklistItemId: string;
+    correctedAnswer: boolean;
+  }[];
+  finalScore?: number;
+};
