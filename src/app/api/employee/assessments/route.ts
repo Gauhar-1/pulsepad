@@ -4,7 +4,6 @@ import {
   mockAssessmentTemplates,
 } from '@/lib/mock-data';
 import { NextResponse } from 'next/server';
-import { isToday, parseISO } from 'date-fns';
 
 export async function GET() {
   // In a real app, you would filter by the logged-in user's ID.

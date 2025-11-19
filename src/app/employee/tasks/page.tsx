@@ -62,6 +62,9 @@ const TaskSkeleton = () => (
 export default function EmployeeTasksPage() {
   const queryClient = useQueryClient();
 
+  // In a real app, get this from auth context
+  const currentUserId = 'emp-001';
+
   const { data, isLoading } = useQuery({
     queryKey: ['employeeTasks'],
     queryFn: fetchTasks,
@@ -70,8 +73,9 @@ export default function EmployeeTasksPage() {
   const { assessments = [], templates = [] } = data || {};
   
   const todaysAssessment = useMemo(() => {
-    return assessments.find((a) => isToday(parseISO(a.date)));
-  }, [assessments]);
+    // Find an assessment for the current user that is for today
+    return assessments.find((a) => a.employeeId === currentUserId && isToday(parseISO(a.date)));
+  }, [assessments, currentUserId]);
 
   const template = useMemo(() => {
      if (!todaysAssessment) return undefined;
