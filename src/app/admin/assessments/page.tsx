@@ -7,67 +7,138 @@ import {
     CardHeader,
     CardTitle,
     CardDescription,
-    CardFooter,
 } from '@/components/ui/card';
-import { CheckCheck, PlusCircle, Trash2 } from 'lucide-react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { CheckCheck, PlusCircle, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { AssessmentTemplate } from '@/lib/definitions';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { AssessmentTemplateSheet } from '@/components/admin/assessment-template-sheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
-interface ChecklistItem {
-    id: string;
-    text: string;
-    weight: number;
+const fetchAssessmentTemplates = async (): Promise<AssessmentTemplate[]> => {
+    // In a real app, this would fetch from '/api/admin/assessments'
+    // but the mock API returns more than just templates.
+    // We'll simulate the fetch and return the templates part.
+    const res = await fetch('/api/admin/assessments');
+    if (!res.ok) throw new Error('Failed to fetch templates');
+    const data = await res.json();
+    return data.templates;
 }
 
+const TableSkeleton = () => (
+     <Table>
+        <TableHeader>
+            <TableRow>
+                <TableHead>Template Name</TableHead>
+                <TableHead>Items</TableHead>
+                <TableHead><span className="sr-only">Actions</span></TableHead>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            {Array.from({length: 3}).map((_, i) => (
+                <TableRow key={i}>
+                    <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-12" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                </TableRow>
+            ))}
+        </TableBody>
+    </Table>
+)
+
 export default function AdminAssessmentsPage() {
+    const queryClient = useQueryClient();
     const { toast } = useToast();
-    const [templateName, setTemplateName] = useState('');
-    const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([
-        { id: `item-${Date.now()}`, text: '', weight: 1 },
-    ]);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [selectedTemplate, setSelectedTemplate] = useState<AssessmentTemplate | null>(null);
 
-    const handleAddItem = () => {
-        setChecklistItems([
-            ...checklistItems,
-            { id: `item-${Date.now()}`, text: '', weight: 1 },
-        ]);
-    };
-
-    const handleRemoveItem = (id: string) => {
-        setChecklistItems(checklistItems.filter(item => item.id !== id));
-    };
-
-    const handleItemChange = (id: string, field: 'text' | 'weight', value: string | number) => {
-        setChecklistItems(
-            checklistItems.map(item =>
-                item.id === id ? { ...item, [field]: value } : item
-            )
-        );
-    };
+    const { data: templates = [], isLoading } = useQuery<AssessmentTemplate[]>({
+        queryKey: ['assessment-templates'],
+        queryFn: fetchAssessmentTemplates,
+    });
     
-    const handleSaveTemplate = () => {
-        if (!templateName.trim()) {
-            toast({
-                title: 'Validation Error',
-                description: 'Template name is required.',
-                variant: 'destructive',
-            });
-            return;
+    // In a real app, mutations would call an API endpoint.
+    // For now, we optimistically update the query cache.
+    const saveTemplateMutation = useMutation({
+        mutationFn: async ({ templateData, id }: { templateData: Omit<AssessmentTemplate, 'id'>, id?: string }) => {
+            const currentTemplates = queryClient.getQueryData<AssessmentTemplate[]>(['assessment-templates']) || [];
+            if (id) {
+                return currentTemplates.map(t => t.id === id ? { ...templateData, id } : t);
+            } else {
+                const newTemplate = { ...templateData, id: `template-${Date.now()}` };
+                return [newTemplate, ...currentTemplates];
+            }
+        },
+        onSuccess: (updatedData) => {
+            queryClient.setQueryData(['assessment-templates'], updatedData);
+            toast({ title: 'Success', description: `Template saved successfully.` });
+            setIsSheetOpen(false);
+            setSelectedTemplate(null);
         }
-        // In a real app, you would post this data to your backend
-        console.log({
-            name: templateName,
-            checklist: checklistItems,
-        });
-        toast({
-            title: 'Template Saved',
-            description: `The "${templateName}" template has been saved successfully.`,
-        });
-        setTemplateName('');
-        setChecklistItems([{ id: `item-${Date.now()}`, text: '', weight: 1 }]);
+    });
+
+    const deleteTemplateMutation = useMutation({
+        mutationFn: async (templateId: string) => {
+            const currentTemplates = queryClient.getQueryData<AssessmentTemplate[]>(['assessment-templates']) || [];
+            return currentTemplates.filter(t => t.id !== templateId);
+        },
+        onSuccess: (updatedData) => {
+            queryClient.setQueryData(['assessment-templates'], updatedData);
+            toast({ title: 'Success', description: 'Template deleted.' });
+            setIsDeleteDialogOpen(false);
+            setSelectedTemplate(null);
+        }
+    });
+
+    const handleCreate = () => {
+        setSelectedTemplate(null);
+        setIsSheetOpen(true);
+    };
+
+    const handleEdit = (template: AssessmentTemplate) => {
+        setSelectedTemplate(template);
+        setIsSheetOpen(true);
+    };
+
+    const handleDelete = (template: AssessmentTemplate) => {
+        setSelectedTemplate(template);
+        setIsDeleteDialogOpen(true);
+    }
+    
+    const handleDeleteConfirm = () => {
+        if (selectedTemplate) {
+            deleteTemplateMutation.mutate(selectedTemplate.id);
+        }
+    }
+
+    const handleSave = (data: Omit<AssessmentTemplate, 'id'>, id?: string) => {
+        saveTemplateMutation.mutate({ templateData: data, id });
     }
 
     return (
@@ -80,74 +151,83 @@ export default function AdminAssessmentsPage() {
                         <p className="text-muted-foreground">Create and manage daily assessment checklists.</p>
                     </div>
                 </div>
+                <Button onClick={handleCreate}>
+                    <PlusCircle className="mr-2 h-4 w-4"/>
+                    Create Template
+                </Button>
             </header>
 
             <main>
-                 <Card className="rounded-2xl shadow-lg max-w-3xl mx-auto">
+                 <Card className="rounded-2xl shadow-lg">
                     <CardHeader>
-                        <CardTitle>Template Builder</CardTitle>
-                        <CardDescription>Design a new assessment template by adding checklist items.</CardDescription>
+                        <CardTitle>All Templates</CardTitle>
+                        <CardDescription>A list of all available assessment templates.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="template-name">Template Name</Label>
-                            <Input
-                                id="template-name"
-                                placeholder="e.g., Daily Punctuality Check"
-                                value={templateName}
-                                onChange={(e) => setTemplateName(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="space-y-4">
-                            <Label>Checklist Items</Label>
-                             <ScrollArea className="h-72 w-full rounded-md border p-4">
-                                <div className="space-y-4">
-                                    {checklistItems.map((item, index) => (
-                                        <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50">
-                                            <span className="text-sm font-medium">{index + 1}.</span>
-                                            <Input
-                                                placeholder="Enter checklist text..."
-                                                value={item.text}
-                                                onChange={(e) => handleItemChange(item.id, 'text', e.target.value)}
-                                                className="flex-grow"
-                                            />
-                                            <div className="flex items-center gap-2">
-                                                <Label htmlFor={`weight-${item.id}`} className="text-sm">Weight</Label>
-                                                <Input
-                                                    id={`weight-${item.id}`}
-                                                    type="number"
-                                                    value={item.weight}
-                                                    onChange={(e) => handleItemChange(item.id, 'weight', parseInt(e.target.value, 10) || 1)}
-                                                    className="w-16"
-                                                />
-                                            </div>
-                                            <Button
-                                                variant="destructive"
-                                                size="icon"
-                                                onClick={() => handleRemoveItem(item.id)}
-                                                disabled={checklistItems.length <= 1}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
+                    <CardContent>
+                       {isLoading ? <TableSkeleton /> : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Template Name</TableHead>
+                                        <TableHead>Checklist Items</TableHead>
+                                        <TableHead><span className="sr-only">Actions</span></TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {templates.map(template => (
+                                        <TableRow key={template.id}>
+                                            <TableCell className="font-medium">{template.name}</TableCell>
+                                            <TableCell>{template.checklist.length}</TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent>
+                                                        <DropdownMenuItem onClick={() => handleEdit(template)}>Edit</DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(template)}>
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </div>
-                            </ScrollArea>
-                            <Button variant="outline" onClick={handleAddItem}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Add Checklist Item
-                            </Button>
-                        </div>
+                                </TableBody>
+                            </Table>
+                       )}
                     </CardContent>
-                    <CardFooter>
-                         <Button size="lg" className="ml-auto" onClick={handleSaveTemplate}>
-                            Save Template
-                        </Button>
-                    </CardFooter>
                 </Card>
             </main>
+
+            <AssessmentTemplateSheet
+                open={isSheetOpen}
+                onOpenChange={setIsSheetOpen}
+                template={selectedTemplate}
+                onSave={handleSave}
+            />
+
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                    This will permanently delete the &quot;{selectedTemplate?.name}&quot; template. This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                    onClick={handleDeleteConfirm}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                    Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
-
