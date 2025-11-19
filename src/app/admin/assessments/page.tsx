@@ -16,10 +16,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { CheckCheck, PlusCircle, MoreVertical, Send } from 'lucide-react';
+import { Check, CheckCheck, PlusCircle, MoreVertical, Send, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { AssessmentTemplate, Employee } from '@/lib/definitions';
+import type { AssessmentTemplate, Employee, DailyAssessment } from '@/lib/definitions';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
@@ -42,6 +42,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 const fetchAssessmentTemplates = async (): Promise<AssessmentTemplate[]> => {
     const res = await fetch('/api/admin/assessments');
@@ -55,6 +56,13 @@ const fetchEmployees = async (): Promise<Employee[]> => {
     if (!res.ok) throw new Error('Failed to fetch employees');
     return res.json();
 }
+
+const fetchAssessmentsData = async (): Promise<{assessments: DailyAssessment[], templates: AssessmentTemplate[]}> => {
+    const res = await fetch('/api/admin/assessments');
+    if (!res.ok) throw new Error('Failed to fetch assessments');
+    return res.json();
+}
+
 
 const TableSkeleton = () => (
      <Table>
@@ -77,6 +85,25 @@ const TableSkeleton = () => (
     </Table>
 )
 
+const statusVariant: { [key: string]: 'default' | 'secondary' | 'outline' | 'destructive' } = {
+  SUBMITTED: 'secondary',
+  VALIDATED: 'default',
+  ASSIGNED: 'outline',
+};
+
+const statusIcon = {
+  SUBMITTED: Circle,
+  VALIDATED: Check,
+  ASSIGNED: Circle,
+};
+
+const statusColor = {
+  SUBMITTED: 'text-blue-500',
+  VALIDATED: 'text-green-500',
+  ASSIGNED: 'text-muted-foreground',
+};
+
+
 export default function AdminAssessmentsPage() {
     const queryClient = useQueryClient();
     const { toast } = useToast();
@@ -95,6 +122,13 @@ export default function AdminAssessmentsPage() {
         queryKey: ['employees'],
         queryFn: fetchEmployees,
     });
+
+    const { data: assessmentsData, isLoading: isLoadingAssessments } = useQuery<{assessments: DailyAssessment[], templates: AssessmentTemplate[]}>({
+        queryKey: ['assessmentsData'],
+        queryFn: fetchAssessmentsData,
+    });
+
+    const dailyAssessments = assessmentsData?.assessments || [];
     
     const saveTemplateMutation = useMutation({
         mutationFn: async ({ templateData, id }: { templateData: Omit<AssessmentTemplate, 'id'>, id?: string }) => {
@@ -161,6 +195,8 @@ export default function AdminAssessmentsPage() {
         setSelectedEmployees([]);
     }
 
+    const getEmployeeName = (id: string) => employees.find(e => e.id === id)?.name || 'Unknown Employee';
+
     return (
         <div className="admin-dashboard-gradient min-h-screen p-4 sm:p-8">
             <header className="mb-8 flex items-center justify-between">
@@ -175,9 +211,10 @@ export default function AdminAssessmentsPage() {
 
             <main>
                 <Tabs defaultValue="templates">
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="templates">Templates</TabsTrigger>
                         <TabsTrigger value="assignments">Assignments</TabsTrigger>
+                         <TabsTrigger value="submissions">Submissions</TabsTrigger>
                     </TabsList>
                     <TabsContent value="templates" className="mt-6">
                         <Card className="rounded-2xl shadow-lg">
@@ -313,6 +350,50 @@ export default function AdminAssessmentsPage() {
                             </CardContent>
                         </Card>
                     </TabsContent>
+                    <TabsContent value="submissions" className="mt-6">
+                        <Card className="rounded-2xl shadow-lg">
+                            <CardHeader>
+                                <CardTitle>Daily Submissions</CardTitle>
+                                <CardDescription>Track submission status for today's assessments.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {isLoadingAssessments || isLoadingEmployees ? <TableSkeleton /> : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Employee</TableHead>
+                                                <TableHead>Date</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead><span className="sr-only">Actions</span></TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {dailyAssessments.map(item => {
+                                                const Icon = statusIcon[item.status];
+                                                return (
+                                                <TableRow key={item.id}>
+                                                    <TableCell>{getEmployeeName(item.employeeId)}</TableCell>
+                                                    <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={statusVariant[item.status]}>
+                                                            <Icon className={`mr-2 h-3 w-3 ${statusColor[item.status]}`} />
+                                                            {item.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {item.status === 'SUBMITTED' && (
+                                                            <Button variant="outline" size="sm">Validate</Button>
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                                )
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
                 </Tabs>
             </main>
 
@@ -345,3 +426,5 @@ export default function AdminAssessmentsPage() {
         </div>
     );
 }
+
+    
