@@ -7,21 +7,11 @@ import {
     CardTitle,
     CardDescription,
 } from '@/components/ui/card';
-import { BarChart, Check, Circle, ExternalLink } from 'lucide-react';
+import { BarChart } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Employee, DailyAssessment, AssessmentTemplate } from '@/lib/definitions';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 
@@ -42,28 +32,9 @@ interface CombinedData {
     templates: AssessmentTemplate[];
 }
 
-const statusVariant: { [key: string]: 'default' | 'secondary' | 'outline' | 'destructive' } = {
-  SUBMITTED: 'secondary',
-  VALIDATED: 'default',
-  ASSIGNED: 'outline',
-};
-
-const statusIcon = {
-  SUBMITTED: Circle,
-  VALIDATED: Check,
-  ASSIGNED: Circle,
-};
-
-const statusColor = {
-  SUBMITTED: 'text-blue-500',
-  VALIDATED: 'text-green-500',
-  ASSIGNED: 'text-muted-foreground',
-};
-
-
 const chartConfig = {
-  score: {
-    label: "Score",
+  averageScore: {
+    label: "Average Score",
     color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig
@@ -82,19 +53,10 @@ export default function AdminPerformancePage() {
 
     const { employees = [], assessments = [] } = data || {};
     
-    const validatedAssessments = assessments
-        .filter(a => a.status === 'VALIDATED' && a.finalScore !== undefined)
-        .map(a => ({
-            ...a,
-            employeeName: employees.find(e => e.id === a.employeeId)?.name || 'Unknown',
-            score: a.finalScore! * 100
-        }))
-        .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
     const employeePerformance = employees.map(emp => {
-        const empAssessments = validatedAssessments.filter(a => a.employeeId === emp.id);
-        const avgScore = empAssessments.length > 0
-            ? empAssessments.reduce((acc, a) => acc + a.score, 0) / empAssessments.length
+        const validatedAssessments = assessments.filter(a => a.employeeId === emp.id && a.status === 'VALIDATED' && a.finalScore !== undefined);
+        const avgScore = validatedAssessments.length > 0
+            ? (validatedAssessments.reduce((acc, a) => acc + (a.finalScore! * 100), 0) / validatedAssessments.length)
             : 0;
         return { name: emp.name, averageScore: parseFloat(avgScore.toFixed(2)) };
     }).sort((a,b) => b.averageScore - a.averageScore);
@@ -107,76 +69,44 @@ export default function AdminPerformancePage() {
                     <BarChart className="h-8 w-8 text-primary"/>
                     <div>
                         <h1 className="text-2xl font-bold">Performance Dashboard</h1>
-                        <p className="text-muted-foreground">Review employee scores and assessment history.</p>
+                        <p className="text-muted-foreground">Review employee scores based on daily assessments.</p>
                     </div>
                 </div>
             </header>
 
-            <main className="grid gap-8 lg:grid-cols-3">
-                 <div className="lg:col-span-2">
-                    <Card className="rounded-2xl shadow-lg">
-                        <CardHeader>
-                            <CardTitle>Employee Performance Scores</CardTitle>
-                             <CardDescription>Average scores from all validated assessments.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                             {isLoading ? <Skeleton className="h-80 w-full" /> : (
-                                <ChartContainer config={chartConfig} className="h-80 w-full">
-                                    <ResponsiveContainer>
-                                        <RechartsBarChart data={employeePerformance} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-                                            <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                                            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
-                                            <Tooltip
-                                                cursor={false}
-                                                content={<ChartTooltipContent
-                                                    labelFormatter={(label) => `Score for ${label}`}
-                                                    formatter={(value) => `${value}%`}
-                                                    indicator="dot"
-                                                />}
-                                            />
-                                            <Bar dataKey="averageScore" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                                        </RechartsBarChart>
-                                    </ResponsiveContainer>
-                                </ChartContainer>
-                             )}
-                        </CardContent>
-                    </Card>
-                </div>
-                <div>
-                     <Card className="rounded-2xl shadow-lg">
-                        <CardHeader>
-                            <CardTitle>Recent Validations</CardTitle>
-                            <CardDescription>Latest assessments that have been graded.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="max-h-[25.5rem] overflow-y-auto">
-                            {isLoading ? <Skeleton className="h-80 w-full" /> : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Employee</TableHead>
-                                        <TableHead>Score</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {validatedAssessments.slice(0, 10).map(item => {
-                                        return (
-                                        <TableRow key={item.id}>
-                                            <TableCell>{item.employeeName}</TableCell>
-                                            <TableCell>
-                                                <Badge>{item.score.toFixed(0)}%</Badge>
-                                            </TableCell>
-                                        </TableRow>
-                                        )
-                                    })}
-                                </TableBody>
-                            </Table>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
+            <main>
+                <Card className="rounded-2xl shadow-lg">
+                    <CardHeader>
+                        <CardTitle>Employee Performance Scores</CardTitle>
+                        <CardDescription>Average scores from all validated daily assessments, sorted by performance.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {isLoading ? <Skeleton className="h-[500px] w-full" /> : (
+                            <ChartContainer config={chartConfig} className="h-[500px] w-full">
+                                <ResponsiveContainer>
+                                    <RechartsBarChart
+                                        layout="vertical"
+                                        data={employeePerformance}
+                                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                    >
+                                        <XAxis type="number" domain={[0, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(value) => `${value}%`} />
+                                        <YAxis dataKey="name" type="category" width={80} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                                        <Tooltip
+                                            cursor={{ fill: 'hsl(var(--muted))' }}
+                                            content={<ChartTooltipContent
+                                                labelFormatter={(label) => `Score for ${label}`}
+                                                formatter={(value) => `${value}%`}
+                                                indicator="dot"
+                                            />}
+                                        />
+                                        <Bar dataKey="averageScore" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                                    </RechartsBarChart>
+                                </ResponsiveContainer>
+                            </ChartContainer>
+                        )}
+                    </CardContent>
+                </Card>
             </main>
         </div>
     );
 }
-
-    
