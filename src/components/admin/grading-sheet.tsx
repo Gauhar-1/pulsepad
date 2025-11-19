@@ -102,14 +102,26 @@ export function GradingSheet({
   
   if (!assessment || !template) return null;
 
+  const handleMarkAllCorrect = () => {
+    if (!template) return;
+    template.checklist.forEach(item => {
+        form.setValue(item.id as any, true);
+    });
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col sm:max-w-xl">
         <SheetHeader>
-          <SheetTitle>Validate Submission</SheetTitle>
-          <SheetDescription>
-            Reviewing assessment for <span className="font-semibold">{employeeName}</span> on {new Date(assessment.date).toLocaleDateString()}.
-          </SheetDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <SheetTitle>Validate Submission</SheetTitle>
+              <SheetDescription>
+                Reviewing assessment for <span className="font-semibold">{employeeName}</span> on {new Date(assessment.date).toLocaleDateString()}.
+              </SheetDescription>
+            </div>
+            <Button variant="secondary" size="sm" onClick={handleMarkAllCorrect}>Mark All Correct</Button>
+          </div>
         </SheetHeader>
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
@@ -161,5 +173,3 @@ export function GradingSheet({
     </Sheet>
   );
 }
-
-    
