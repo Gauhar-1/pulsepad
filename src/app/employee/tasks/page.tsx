@@ -12,12 +12,11 @@ import {
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Award, Flame, ClipboardCheck } from 'lucide-react';
+import { ClipboardCheck } from 'lucide-react';
 import { DailyAssessment, AssessmentTemplate } from '@/lib/definitions';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const fetchTasks = async (): Promise<{
   assessments: DailyAssessment[];
@@ -89,12 +88,15 @@ export default function EmployeeTasksPage() {
       return updatedAssessment;
     },
     onSuccess: (updatedData) => {
-      queryClient.setQueryData(['employeeTasks'], (oldData: any) => ({
-        ...oldData,
-        assessments: oldData.assessments.map((a: DailyAssessment) =>
-          a.id === updatedData.id ? updatedData : a
-        ),
-      }));
+      queryClient.setQueryData(['employeeTasks'], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          assessments: oldData.assessments.map((a: DailyAssessment) =>
+            a.id === updatedData.id ? updatedData : a
+          ),
+        };
+      });
     },
   });
 
@@ -121,7 +123,6 @@ export default function EmployeeTasksPage() {
 
   const completedCount = tasks.filter((t) => t.isCompleted).length;
   const progress = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
-  const allTasksCompleted = progress === 100;
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
@@ -130,8 +131,8 @@ export default function EmployeeTasksPage() {
           Daily Tasks
         </h1>
       </div>
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-2">
+      <div className="grid gap-6">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ClipboardCheck /> Today's Checklist
@@ -181,62 +182,20 @@ export default function EmployeeTasksPage() {
               </Alert>
             )}
           </CardContent>
-          <CardFooter>
-            <div className="w-full">
-              <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                <span>Progress</span>
-                <span>
-                  {completedCount} / {tasks.length}
-                </span>
-              </div>
-              <Progress value={progress} />
-            </div>
-          </CardFooter>
+          {tasks.length > 0 && (
+            <CardFooter>
+                <div className="w-full">
+                <div className="flex justify-between text-sm text-muted-foreground mb-1">
+                    <span>Progress</span>
+                    <span>
+                    {completedCount} / {tasks.length}
+                    </span>
+                </div>
+                <Progress value={progress} />
+                </div>
+            </CardFooter>
+          )}
         </Card>
-        <div className="space-y-6">
-          <Card className="relative overflow-hidden">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Flame /> Daily Streak
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-6xl font-bold text-primary">5</p>
-              <p className="text-muted-foreground">days in a row!</p>
-            </CardContent>
-            <AnimatePresence>
-              {allTasksCompleted && (
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  className="absolute inset-0 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm"
-                >
-                  <Award className="h-20 w-20 text-yellow-500" />
-                  <p className="mt-2 text-xl font-bold">Well done!</p>
-                  <p className="text-sm text-muted-foreground">
-                    All tasks completed for today.
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Achievements</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/20 text-yellow-500">
-                  <Flame />
-                </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/20 text-blue-500">
-                  <Award />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </main>
   );
