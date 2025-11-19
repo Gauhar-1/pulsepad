@@ -17,6 +17,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { ClipboardCheck } from 'lucide-react';
 import { DailyAssessment, AssessmentTemplate } from '@/lib/definitions';
 import { motion } from 'framer-motion';
+import { isToday, parseISO } from 'date-fns';
 
 const fetchTasks = async (): Promise<{
   assessments: DailyAssessment[];
@@ -47,6 +48,14 @@ const TaskSkeleton = () => (
       <Skeleton className="h-6 w-6 rounded" />
       <Skeleton className="h-6 flex-1" />
     </div>
+     <div className="flex items-center space-x-4">
+      <Skeleton className="h-6 w-6 rounded" />
+      <Skeleton className="h-6 flex-1" />
+    </div>
+     <div className="flex items-center space-x-4">
+      <Skeleton className="h-6 w-6 rounded" />
+      <Skeleton className="h-6 flex-1" />
+    </div>
   </div>
 );
 
@@ -59,10 +68,15 @@ export default function EmployeeTasksPage() {
   });
 
   const { assessments = [], templates = [] } = data || {};
-  const todaysAssessment = assessments.find(
-    (a) => new Date(a.date).toDateString() === new Date().toDateString()
-  );
-  const template = templates.find((t) => t.id === todaysAssessment?.templateId);
+  
+  const todaysAssessment = useMemo(() => {
+    return assessments.find((a) => isToday(parseISO(a.date)));
+  }, [assessments]);
+
+  const template = useMemo(() => {
+     if (!todaysAssessment) return undefined;
+     return templates.find((t) => t.id === todaysAssessment.templateId);
+  }, [templates, todaysAssessment]);
 
   const initialTasks = useMemo(() => {
     if (!template || !todaysAssessment) return [];
