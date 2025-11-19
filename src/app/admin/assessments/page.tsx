@@ -444,7 +444,7 @@ export default function AdminAssessmentsPage() {
                                                 return (
                                                 <TableRow key={item.id}>
                                                     <TableCell>{getEmployeeName(item.employeeId)}</TableCell>
-                                                    <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
+                                                    <TableCell>{new Date().toLocaleDateString()}</TableCell>
                                                     <TableCell>
                                                         <Badge variant={statusVariant[item.status]}>
                                                             <Icon className={`mr-2 h-3 w-3 ${statusColor[item.status]}`} />
@@ -508,6 +508,8 @@ export default function AdminAssessmentsPage() {
         </div>
     );
 }
+
+    
 
     
 
