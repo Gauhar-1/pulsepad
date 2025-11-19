@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { User } from '@/lib/definitions';
 import { Logo } from '@/components/logo';
-import { LogOut, FolderKanban, Users, UserPlus, Bot, History, BookOpen } from 'lucide-react';
+import { LogOut, FolderKanban, Users, UserPlus, Bot, History, BookOpen, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import {
   SidebarProvider,
@@ -43,6 +43,7 @@ const adminNavItems = [
   { href: '/admin/employees', icon: Users, label: 'Employees' },
   { href: '/admin/candidates', icon: UserPlus, label: 'Candidates' },
   { href: '/admin/training', icon: BookOpen, label: 'Training' },
+  { href: '/admin/performance', icon: TrendingUp, label: 'Performance' },
   { href: '/admin/automation', icon: Bot, label: 'Automation' },
   { href: '/admin/audit-logs', icon: History, label: 'Audit Logs' },
 ];
@@ -122,7 +123,7 @@ export default function AdminLayout({
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <header className="sticky top-0 z-20 flex h-[57px] items-center justify-between border-b bg-background px-4 md:hidden">
+          <header className="sticky top-0 z-30 flex h-[57px] items-center justify-between border-b bg-background px-4 md:hidden">
             <Logo />
             <SidebarTrigger />
           </header>
