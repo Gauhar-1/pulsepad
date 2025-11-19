@@ -363,7 +363,7 @@ export const mockDailyAssessments: DailyAssessment[] = [
         id: 'assess-002',
         employeeId: 'emp-002',
         templateId: 'template-001',
-        date: formatISO(subDays(now, 1), { representation: 'date' }),
+        date: formatISO(now, { representation: 'date' }),
         status: 'SUBMITTED',
         responses: [
             { checklistItemId: 'chk-1', answer: true },
@@ -573,3 +573,6 @@ export const mockDailyAssessments: DailyAssessment[] = [
         finalScore: 0.66
     },
 ];
+
+
+    
