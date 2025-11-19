@@ -1,0 +1,243 @@
+
+'use client';
+import { useState, useEffect, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Award, Flame, ClipboardCheck } from 'lucide-react';
+import { DailyAssessment, AssessmentTemplate } from '@/lib/definitions';
+import { AnimatePresence, motion } from 'framer-motion';
+
+const fetchTasks = async (): Promise<{
+  assessments: DailyAssessment[];
+  templates: AssessmentTemplate[];
+}> => {
+  const res = await fetch('/api/employee/assessments');
+  if (!res.ok) throw new Error('Failed to fetch tasks');
+  return res.json();
+};
+
+type TaskItem = {
+  id: string;
+  text: string;
+  isCompleted: boolean;
+};
+
+const TaskSkeleton = () => (
+  <div className="space-y-4">
+    <div className="flex items-center space-x-4">
+      <Skeleton className="h-6 w-6 rounded" />
+      <Skeleton className="h-6 flex-1" />
+    </div>
+    <div className="flex items-center space-x-4">
+      <Skeleton className="h-6 w-6 rounded" />
+      <Skeleton className="h-6 flex-1" />
+    </div>
+    <div className="flex items-center space-x-4">
+      <Skeleton className="h-6 w-6 rounded" />
+      <Skeleton className="h-6 flex-1" />
+    </div>
+  </div>
+);
+
+export default function EmployeeTasksPage() {
+  const queryClient = useQueryClient();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['employeeTasks'],
+    queryFn: fetchTasks,
+  });
+
+  const { assessments = [], templates = [] } = data || {};
+  const todaysAssessment = assessments.find(
+    (a) => new Date(a.date).toDateString() === new Date().toDateString()
+  );
+  const template = templates.find((t) => t.id === todaysAssessment?.templateId);
+
+  const initialTasks = useMemo(() => {
+    if (!template || !todaysAssessment) return [];
+    return template.checklist.map((item) => ({
+      id: item.id,
+      text: item.text,
+      isCompleted:
+        todaysAssessment.responses.find((r) => r.checklistItemId === item.id)
+          ?.answer || false,
+    }));
+  }, [template, todaysAssessment]);
+
+  const [tasks, setTasks] = useState<TaskItem[]>(initialTasks);
+
+  useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (updatedAssessment: DailyAssessment) => {
+      // In a real app, this would be a POST to an API
+      // For optimistic update, we can just update the cache
+      return updatedAssessment;
+    },
+    onSuccess: (updatedData) => {
+      queryClient.setQueryData(['employeeTasks'], (oldData: any) => ({
+        ...oldData,
+        assessments: oldData.assessments.map((a: DailyAssessment) =>
+          a.id === updatedData.id ? updatedData : a
+        ),
+      }));
+    },
+  });
+
+  const handleTaskToggle = (taskId: string) => {
+    const newTasks = tasks.map((task) =>
+      task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
+    );
+    setTasks(newTasks);
+
+    if (todaysAssessment) {
+      const updatedResponses = newTasks.map((task) => ({
+        checklistItemId: task.id,
+        answer: task.isCompleted,
+      }));
+
+      const updatedAssessment: DailyAssessment = {
+        ...todaysAssessment,
+        status: 'SUBMITTED',
+        responses: updatedResponses,
+      };
+      updateMutation.mutate(updatedAssessment);
+    }
+  };
+
+  const completedCount = tasks.filter((t) => t.isCompleted).length;
+  const progress = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
+  const allTasksCompleted = progress === 100;
+
+  return (
+    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+      <div className="flex items-center">
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+          Daily Tasks
+        </h1>
+      </div>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardCheck /> Today's Checklist
+            </CardTitle>
+            <CardDescription>
+              Complete these tasks to log your daily progress.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <TaskSkeleton />
+            ) : tasks.length > 0 ? (
+              <div className="space-y-4">
+                {tasks.map((task) => (
+                  <motion.div
+                    key={task.id}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex items-center space-x-4 rounded-md border p-4"
+                  >
+                    <Checkbox
+                      id={task.id}
+                      checked={task.isCompleted}
+                      onCheckedChange={() => handleTaskToggle(task.id)}
+                    />
+                    <label
+                      htmlFor={task.id}
+                      className={`flex-1 text-sm font-medium leading-none ${
+                        task.isCompleted
+                          ? 'text-muted-foreground line-through'
+                          : ''
+                      }`}
+                    >
+                      {task.text}
+                    </label>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <Alert>
+                <ClipboardCheck className="h-4 w-4" />
+                <AlertTitle>No Tasks Assigned</AlertTitle>
+                <AlertDescription>
+                  There are no tasks assigned to you for today. Great job!
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+          <CardFooter>
+            <div className="w-full">
+              <div className="flex justify-between text-sm text-muted-foreground mb-1">
+                <span>Progress</span>
+                <span>
+                  {completedCount} / {tasks.length}
+                </span>
+              </div>
+              <Progress value={progress} />
+            </div>
+          </CardFooter>
+        </Card>
+        <div className="space-y-6">
+          <Card className="relative overflow-hidden">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Flame /> Daily Streak
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-6xl font-bold text-primary">5</p>
+              <p className="text-muted-foreground">days in a row!</p>
+            </CardContent>
+            <AnimatePresence>
+              {allTasksCompleted && (
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  className="absolute inset-0 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm"
+                >
+                  <Award className="h-20 w-20 text-yellow-500" />
+                  <p className="mt-2 text-xl font-bold">Well done!</p>
+                  <p className="text-sm text-muted-foreground">
+                    All tasks completed for today.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Achievements</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/20 text-yellow-500">
+                  <Flame />
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/20 text-blue-500">
+                  <Award />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </main>
+  );
+}

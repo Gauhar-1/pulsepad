@@ -12,6 +12,7 @@ import {
   Settings,
   BookOpen,
   Bell,
+  ClipboardCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -48,6 +49,7 @@ const useMockUser = () => {
 
 const employeeNavItems = [
   { href: '/employee/projects', icon: LayoutDashboard, label: 'My Projects' },
+  { href: '/employee/tasks', icon: ClipboardCheck, label: 'Daily Tasks' },
   { href: '/employee/notifications', icon: Bell, label: 'Notifications' },
   { href: '/employee/training', icon: BookOpen, label: 'Training' },
   { href: '/employee/reports', icon: FileText, label: 'Reports' },
