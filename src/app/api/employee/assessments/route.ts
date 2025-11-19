@@ -10,6 +10,8 @@ export async function GET() {
   // In a real app, you would filter by the logged-in user's ID
   // For this mock, we'll return the assessment for user 'emp-001' for today
   const userId = 'emp-001';
+  
+  // Find an assessment for the correct user that is dated for today.
   const todaysAssessment = mockDailyAssessments.find(
     (a) => a.employeeId === userId && isToday(parseISO(a.date))
   );
