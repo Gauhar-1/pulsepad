@@ -1,6 +1,6 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
     Card,
     CardContent,
@@ -43,6 +43,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { GradingSheet } from '@/components/admin/grading-sheet';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const fetchAssessmentTemplates = async (): Promise<AssessmentTemplate[]> => {
     const res = await fetch('/api/admin/assessments');
@@ -63,6 +70,7 @@ const fetchAssessmentsData = async (): Promise<{assessments: DailyAssessment[], 
     return res.json();
 }
 
+const employeeTypes = ['All Types', 'Lead', 'Core', 'VA', 'Coder', 'Freelancer'];
 
 const TableSkeleton = () => (
      <Table>
@@ -114,6 +122,7 @@ export default function AdminAssessmentsPage() {
     const [selectedAssignmentTemplates, setSelectedAssignmentTemplates] = useState<string[]>([]);
     const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
     const [assessmentToGrade, setAssessmentToGrade] = useState<DailyAssessment | null>(null);
+    const [employeeTypeFilter, setEmployeeTypeFilter] = useState('All Types');
 
 
     const { data: templates = [], isLoading: isLoadingTemplates } = useQuery<AssessmentTemplate[]>({
@@ -130,6 +139,13 @@ export default function AdminAssessmentsPage() {
         queryKey: ['assessmentsData'],
         queryFn: fetchAssessmentsData,
     });
+    
+    const filteredEmployees = useMemo(() => {
+        if (employeeTypeFilter === 'All Types') {
+            return employees.filter(e => e.active);
+        }
+        return employees.filter(e => e.active && e.type === employeeTypeFilter);
+    }, [employees, employeeTypeFilter]);
 
     const dailyAssessments = assessmentsData?.assessments || [];
     
@@ -342,20 +358,39 @@ export default function AdminAssessmentsPage() {
                                     </Card>
                                 </div>
                                  <div className="space-y-4">
-                                    <h3 className="font-semibold">2. Select Employees to Assign</h3>
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="font-semibold">2. Select Employees to Assign</h3>
+                                        <Select value={employeeTypeFilter} onValueChange={setEmployeeTypeFilter}>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="Filter by type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {employeeTypes.map(type => (
+                                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                     <Card className="max-h-80 overflow-y-auto">
                                         <Table>
                                              <TableHeader>
                                                 <TableRow>
                                                     <TableHead className="w-12"><Checkbox
-                                                        checked={selectedEmployees.length > 0 && selectedEmployees.length === employees.length}
-                                                        onCheckedChange={(checked) => setSelectedEmployees(checked ? employees.map(e => e.id) : [])}
+                                                        checked={filteredEmployees.length > 0 && filteredEmployees.every(e => selectedEmployees.includes(e.id))}
+                                                        onCheckedChange={(checked) => {
+                                                            const filteredIds = filteredEmployees.map(e => e.id);
+                                                            setSelectedEmployees(prev => {
+                                                                const otherSelections = prev.filter(id => !filteredIds.includes(id));
+                                                                return checked ? [...otherSelections, ...filteredIds] : otherSelections;
+                                                            });
+                                                        }}
                                                     /></TableHead>
                                                     <TableHead>Employee Name</TableHead>
+                                                    <TableHead>Type</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {employees.filter(e => e.active).map(employee => (
+                                                {filteredEmployees.map(employee => (
                                                     <TableRow key={`emp-assign-${employee.id}`}>
                                                          <TableCell>
                                                             <Checkbox
@@ -366,6 +401,7 @@ export default function AdminAssessmentsPage() {
                                                             />
                                                         </TableCell>
                                                         <TableCell>{employee.name}</TableCell>
+                                                        <TableCell>{employee.type}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
@@ -472,5 +508,7 @@ export default function AdminAssessmentsPage() {
         </div>
     );
 }
+
+    
 
     
