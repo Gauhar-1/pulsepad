@@ -1,6 +1,6 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -36,7 +36,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import type { ProjectSheetItem } from '@/lib/definitions';
+import type { ProjectSheetItem, Employee } from '@/lib/definitions';
 import { useQuery } from '@tanstack/react-query';
 
 const mockCandidates = [
@@ -57,6 +57,9 @@ const communicationChannels = [
     { value: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
 ];
 
+const employeeTypes = ['All Types', 'Lead', 'Core', 'VA', 'Coder', 'Freelancer'];
+
+
 const fetchProjects = async (): Promise<ProjectSheetItem[]> => {
     const res = await fetch('/api/admin/projects');
     if (!res.ok) {
@@ -65,16 +68,37 @@ const fetchProjects = async (): Promise<ProjectSheetItem[]> => {
     return res.json();
 };
 
+const fetchEmployees = async (): Promise<Employee[]> => {
+    const res = await fetch('/api/admin/employees');
+    if (!res.ok) {
+        throw new Error('Failed to fetch employees');
+    }
+    return res.json();
+}
+
 
 export default function AdminAutomationPage() {
   const { toast } = useToast();
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
+  const [employeeTypeFilter, setEmployeeTypeFilter] = useState('All Types');
   
   const { data: projects = [] } = useQuery<ProjectSheetItem[]>({
     queryKey: ['projects'],
     queryFn: fetchProjects
   });
+  
+  const { data: employees = [] } = useQuery<Employee[]>({
+    queryKey: ['employees'],
+    queryFn: fetchEmployees
+  });
+
+  const filteredEmployees = useMemo(() => {
+    if (employeeTypeFilter === 'All Types') {
+        return employees.filter(e => e.active);
+    }
+    return employees.filter(e => e.active && e.type === employeeTypeFilter);
+  }, [employees, employeeTypeFilter]);
 
   const handleQueueCommunications = (type: 'project' | 'candidate') => {
     toast({
@@ -83,6 +107,7 @@ export default function AdminAutomationPage() {
     });
     if (type === 'project') {
         setSelectedProjects([]);
+        // We don't reset employees here to allow sending multiple batches
     } else {
         setSelectedCandidates([]);
     }
@@ -182,7 +207,60 @@ export default function AdminAutomationPage() {
                             </Card>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="project-message">4. Message Template</Label>
+                            <div className="flex justify-between items-center">
+                                <Label>4. Select Employees ({filteredEmployees.length} shown)</Label>
+                                <Select value={employeeTypeFilter} onValueChange={setEmployeeTypeFilter}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Filter by type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {employeeTypes.map(type => (
+                                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                             <Card className="max-h-60 overflow-y-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-12">
+                                                <Checkbox
+                                                    checked={filteredEmployees.length > 0 && filteredEmployees.every(e => selectedEmployees.includes(e.id))}
+                                                    onCheckedChange={(checked) => {
+                                                        const filteredIds = filteredEmployees.map(e => e.id);
+                                                        setSelectedEmployees(prev => {
+                                                            const otherSelections = prev.filter(id => !filteredIds.includes(id));
+                                                            return checked ? [...otherSelections, ...filteredIds] : otherSelections;
+                                                        });
+                                                    }}
+                                                />
+                                            </TableHead>
+                                            <TableHead>Employee Name</TableHead>
+                                            <TableHead>Type</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredEmployees.map(employee => (
+                                            <TableRow key={`emp-assign-${employee.id}`}>
+                                                <TableCell>
+                                                    <Checkbox
+                                                        checked={selectedEmployees.includes(employee.id)}
+                                                        onCheckedChange={(checked) => {
+                                                            setSelectedEmployees(prev => checked ? [...prev, employee.id] : prev.filter(id => id !== employee.id));
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>{employee.name}</TableCell>
+                                                <TableCell>{employee.type}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </Card>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="project-message">5. Message Template</Label>
                             <Textarea id="project-message" placeholder="Hi {team_member}, this is a reminder about..." />
                         </div>
 
