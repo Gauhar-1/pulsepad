@@ -394,5 +394,57 @@ export const mockDailyAssessments: DailyAssessment[] = [
         date: formatISO(now, { representation: 'date' }),
         status: 'ASSIGNED',
         responses: [],
-    }
+    },
+    {
+        id: 'assess-005',
+        employeeId: 'emp-002',
+        templateId: 'template-002',
+        date: formatISO(subDays(now, 2), { representation: 'date' }),
+        status: 'VALIDATED',
+        responses: [
+            { checklistItemId: 'chk-5', answer: true },
+            { checklistItemId: 'chk-6', answer: true },
+        ],
+        finalScore: 1
+    },
+    {
+        id: 'assess-006',
+        employeeId: 'emp-005',
+        templateId: 'template-001',
+        date: formatISO(subDays(now, 2), { representation: 'date' }),
+        status: 'VALIDATED',
+        responses: [
+            { checklistItemId: 'chk-1', answer: true },
+            { checklistItemId: 'chk-2', answer: true },
+            { checklistItemId: 'chk-3', answer: true },
+            { checklistItemId: 'chk-4', answer: true },
+        ],
+        finalScore: 1
+    },
+    {
+        id: 'assess-007',
+        employeeId: 'emp-008',
+        templateId: 'template-001',
+        date: formatISO(subDays(now, 3), { representation: 'date' }),
+        status: 'VALIDATED',
+        responses: [
+            { checklistItemId: 'chk-1', answer: false },
+            { checklistItemId: 'chk-2', answer: true },
+            { checklistItemId: 'chk-3', answer: true },
+            { checklistItemId: 'chk-4', answer: false },
+        ],
+        finalScore: 0.5
+    },
+    {
+        id: 'assess-008',
+        employeeId: 'emp-009',
+        templateId: 'template-002',
+        date: formatISO(subDays(now, 3), { representation: 'date' }),
+        status: 'VALIDATED',
+        responses: [
+            { checklistItemId: 'chk-5', answer: true },
+            { checklistItemId: 'chk-6', answer: true },
+        ],
+        finalScore: 1
+    },
 ];
