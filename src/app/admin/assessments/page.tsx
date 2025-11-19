@@ -19,7 +19,7 @@ import {
 import { Check, CheckCheck, PlusCircle, MoreVertical, Send, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { AssessmentTemplate, Employee, DailyAssessment } from '@/lib/definitions';
+import type { AssessmentTemplate, Employee, DailyAssessment, ChecklistItem } from '@/lib/definitions';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
@@ -52,10 +52,9 @@ import {
 } from '@/components/ui/select';
 
 const fetchAssessmentTemplates = async (): Promise<AssessmentTemplate[]> => {
-    const res = await fetch('/api/admin/assessments');
+    const res = await fetch('/api/admin/assessments/templates');
     if (!res.ok) throw new Error('Failed to fetch templates');
-    const data = await res.json();
-    return data.templates;
+    return res.json();
 }
 
 const fetchEmployees = async (): Promise<Employee[]> => {
@@ -135,7 +134,7 @@ export default function AdminAssessmentsPage() {
         queryFn: fetchEmployees,
     });
 
-    const { data: assessmentsData, isLoading: isLoadingAssessments, refetch: refetchAssessments } = useQuery<{assessments: DailyAssessment[], templates: AssessmentTemplate[]}>({
+    const { data: assessmentsData, isLoading: isLoadingAssessments } = useQuery<{assessments: DailyAssessment[], templates: AssessmentTemplate[]}>({
         queryKey: ['assessmentsData'],
         queryFn: fetchAssessmentsData,
     });
@@ -150,51 +149,87 @@ export default function AdminAssessmentsPage() {
     const dailyAssessments = assessmentsData?.assessments || [];
     
     const saveTemplateMutation = useMutation({
-        mutationFn: async ({ templateData, id }: { templateData: Omit<AssessmentTemplate, 'id'>, id?: string }) => {
-            const currentTemplates = queryClient.getQueryData<AssessmentTemplate[]>(['assessment-templates']) || [];
-            if (id) {
-                return currentTemplates.map(t => t.id === id ? { ...templateData, id } : t);
-            } else {
-                const newTemplate = { ...templateData, id: `template-${Date.now()}` };
-                return [newTemplate, ...currentTemplates];
-            }
+        mutationFn: async ({ templateData, id }: { templateData: Omit<AssessmentTemplate, '_id'>, id?: string }) => {
+            const url = id ? `/api/admin/assessments/templates/${id}` : '/api/admin/assessments/templates';
+            const method = id ? 'PUT' : 'POST';
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(templateData),
+            });
+            if (!res.ok) throw new Error(`Failed to save template`);
+            return res.json();
         },
-        onSuccess: (updatedData) => {
-            queryClient.setQueryData(['assessment-templates'], updatedData);
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['assessment-templates'] });
+            queryClient.invalidateQueries({ queryKey: ['assessmentsData'] });
             toast({ title: 'Success', description: `Template saved successfully.` });
             setIsSheetOpen(false);
             setSelectedTemplate(null);
+        },
+        onError: (error) => {
+             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
 
     const deleteTemplateMutation = useMutation({
         mutationFn: async (templateId: string) => {
-            const currentTemplates = queryClient.getQueryData<AssessmentTemplate[]>(['assessment-templates']) || [];
-            return currentTemplates.filter(t => t.id !== templateId);
+            const res = await fetch(`/api/admin/assessments/templates/${templateId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete template');
         },
-        onSuccess: (updatedData) => {
-            queryClient.setQueryData(['assessment-templates'], updatedData);
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['assessment-templates'] });
+            queryClient.invalidateQueries({ queryKey: ['assessmentsData'] });
             toast({ title: 'Success', description: 'Template deleted.' });
             setIsDeleteDialogOpen(false);
             setSelectedTemplate(null);
+        },
+        onError: (error) => {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' });
+        }
+    });
+    
+    const assignAssessmentsMutation = useMutation({
+        mutationFn: async ({ employeeIds, templateIds }: { employeeIds: string[], templateIds: string[] }) => {
+            const res = await fetch('/api/admin/assessments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ employeeIds, templateIds }),
+            });
+            if (!res.ok) throw new Error('Failed to send assignments');
+            return res.json();
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['assessmentsData'] });
+            toast({
+                title: "Assignments Sent",
+                description: data.message || `Sent assessment with ${selectedAssignmentTemplates.length} templates to ${selectedEmployees.length} employees.`
+            });
+            setSelectedAssignmentTemplates([]);
+            setSelectedEmployees([]);
+        },
+        onError: (error) => {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     });
     
     const saveGradeMutation = useMutation({
         mutationFn: async (gradedAssessment: DailyAssessment) => {
-            // In a real app, this would be a POST to an API
-            const currentData = queryClient.getQueryData<{assessments: DailyAssessment[], templates: AssessmentTemplate[]}>(['assessmentsData']);
-            if (!currentData) return;
-
-            const newAssessments = currentData.assessments.map(a => a.id === gradedAssessment.id ? gradedAssessment : a);
-            return { ...currentData, assessments: newAssessments };
+            const res = await fetch(`/api/admin/assessments/submissions/${gradedAssessment._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(gradedAssessment),
+            });
+            if (!res.ok) throw new Error('Failed to save grade');
+            return res.json();
         },
-        onSuccess: (updatedData) => {
-            if(updatedData) {
-                queryClient.setQueryData(['assessmentsData'], updatedData);
-            }
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['assessmentsData'] });
             toast({ title: "Grade Saved", description: "The assessment has been validated and scored." });
             setIsGradingSheetOpen(false);
+        },
+        onError: (error) => {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
     })
 
@@ -216,21 +251,17 @@ export default function AdminAssessmentsPage() {
     
     const handleDeleteConfirm = () => {
         if (selectedTemplate) {
-            deleteTemplateMutation.mutate(selectedTemplate.id);
+            deleteTemplateMutation.mutate(selectedTemplate._id);
         }
     }
 
-    const handleSave = (data: Omit<AssessmentTemplate, 'id'>, id?: string) => {
-        saveTemplateMutation.mutate({ templateData: data, id });
+    const handleSave = (data: Omit<AssessmentTemplate, '_id' | 'checklist'> & { checklist: Omit<ChecklistItem, '_id'>[] }, id?: string) => {
+        saveTemplateMutation.mutate({ templateData: data as Omit<AssessmentTemplate, '_id'>, id });
     }
 
     const handleSendAssignments = () => {
-        toast({
-            title: "Assignments Sent",
-            description: `Sent assessment with ${selectedAssignmentTemplates.length} templates to ${selectedEmployees.length} employees.`
-        });
-        setSelectedAssignmentTemplates([]);
-        setSelectedEmployees([]);
+        if (selectedAssignmentTemplates.length === 0 || selectedEmployees.length === 0) return;
+        assignAssessmentsMutation.mutate({ employeeIds: selectedEmployees, templateIds: selectedAssignmentTemplates });
     }
     
     const handleValidateClick = (assessment: DailyAssessment) => {
@@ -245,7 +276,10 @@ export default function AdminAssessmentsPage() {
     const getEmployeeName = (id: string) => employees.find(e => e.id === id)?.name || 'Unknown Employee';
 
     const getTemplateForAssessment = (assessment: DailyAssessment) => {
-        return templates.find(t => t.id === assessment.templateId);
+        if (typeof assessment.templateId === 'object' && assessment.templateId !== null) {
+            return assessment.templateId as AssessmentTemplate;
+        }
+        return templates.find(t => t._id === assessment.templateId);
     }
 
     return (
@@ -293,7 +327,7 @@ export default function AdminAssessmentsPage() {
                                         </TableHeader>
                                         <TableBody>
                                             {templates.map(template => (
-                                                <TableRow key={template.id}>
+                                                <TableRow key={template._id}>
                                                     <TableCell className="font-medium">{template.name}</TableCell>
                                                     <TableCell>{template.checklist.length}</TableCell>
                                                     <TableCell className="text-right">
@@ -334,19 +368,19 @@ export default function AdminAssessmentsPage() {
                                                 <TableRow>
                                                     <TableHead className="w-12"><Checkbox 
                                                         checked={selectedAssignmentTemplates.length > 0 && selectedAssignmentTemplates.length === templates.length}
-                                                        onCheckedChange={(checked) => setSelectedAssignmentTemplates(checked ? templates.map(t => t.id) : [])}
+                                                        onCheckedChange={(checked) => setSelectedAssignmentTemplates(checked ? templates.map(t => t._id) : [])}
                                                     /></TableHead>
                                                     <TableHead>Template Name</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
                                                  {templates.map(template => (
-                                                    <TableRow key={`assign-${template.id}`}>
+                                                    <TableRow key={`assign-${template._id}`}>
                                                         <TableCell>
                                                             <Checkbox
-                                                                checked={selectedAssignmentTemplates.includes(template.id)}
+                                                                checked={selectedAssignmentTemplates.includes(template._id)}
                                                                 onCheckedChange={(checked) => {
-                                                                    setSelectedAssignmentTemplates(prev => checked ? [...prev, template.id] : prev.filter(id => id !== template.id));
+                                                                    setSelectedAssignmentTemplates(prev => checked ? [...prev, template._id] : prev.filter(id => id !== template._id));
                                                                 }}
                                                             />
                                                         </TableCell>
@@ -412,7 +446,7 @@ export default function AdminAssessmentsPage() {
                                      <Button 
                                         size="lg" 
                                         onClick={handleSendAssignments}
-                                        disabled={selectedAssignmentTemplates.length === 0 || selectedEmployees.length === 0}
+                                        disabled={assignAssessmentsMutation.isPending || selectedAssignmentTemplates.length === 0 || selectedEmployees.length === 0}
                                      >
                                         <Send className="mr-2 h-4 w-4" /> 
                                         Send Assignment to {selectedEmployees.length} Employee(s)
@@ -442,9 +476,9 @@ export default function AdminAssessmentsPage() {
                                             {dailyAssessments.map(item => {
                                                 const Icon = statusIcon[item.status];
                                                 return (
-                                                <TableRow key={item.id}>
+                                                <TableRow key={item._id}>
                                                     <TableCell>{getEmployeeName(item.employeeId)}</TableCell>
-                                                    <TableCell>{new Date().toLocaleDateString()}</TableCell>
+                                                    <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
                                                     <TableCell>
                                                         <Badge variant={statusVariant[item.status]}>
                                                             <Icon className={`mr-2 h-3 w-3 ${statusColor[item.status]}`} />
@@ -453,7 +487,7 @@ export default function AdminAssessmentsPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         {item.status === 'SUBMITTED' && (
-                                                            <Button variant="outline" size="sm" onClick={() => handleValidateClick(item)}>Validate</Button>
+                                                            <Button variant="outline" size="sm" onClick={() => handleValidateClick(item)} disabled={saveGradeMutation.isPending}>Validate</Button>
                                                         )}
                                                     </TableCell>
                                                 </TableRow>
@@ -473,6 +507,7 @@ export default function AdminAssessmentsPage() {
                 onOpenChange={setIsSheetOpen}
                 template={selectedTemplate}
                 onSave={handleSave}
+                isSaving={saveTemplateMutation.isPending}
             />
 
             {assessmentToGrade && (
@@ -483,6 +518,7 @@ export default function AdminAssessmentsPage() {
                     template={getTemplateForAssessment(assessmentToGrade)}
                     employeeName={getEmployeeName(assessmentToGrade.employeeId)}
                     onSave={handleSaveGrade}
+                    isSaving={saveGradeMutation.isPending}
                 />
             )}
 
@@ -499,6 +535,7 @@ export default function AdminAssessmentsPage() {
                     <AlertDialogAction
                     onClick={handleDeleteConfirm}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    disabled={deleteTemplateMutation.isPending}
                     >
                     Delete
                     </AlertDialogAction>
@@ -508,9 +545,3 @@ export default function AdminAssessmentsPage() {
         </div>
     );
 }
-
-    
-
-    
-
-    

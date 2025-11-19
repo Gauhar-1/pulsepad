@@ -28,6 +28,7 @@ interface GradingSheetProps {
   template: AssessmentTemplate | undefined;
   employeeName: string;
   onSave: (gradedAssessment: DailyAssessment) => void;
+  isSaving: boolean;
 }
 
 export function GradingSheet({
@@ -37,12 +38,13 @@ export function GradingSheet({
   template,
   employeeName,
   onSave,
+  isSaving,
 }: GradingSheetProps) {
   const formSchema = useMemo(() => {
     if (!template) return z.object({});
     
     const schemaObject = template.checklist.reduce((acc, item) => {
-      acc[item.id] = z.boolean();
+      acc[item._id] = z.boolean();
       return acc;
     }, {} as Record<string, z.ZodBoolean>);
 
@@ -59,26 +61,25 @@ export function GradingSheet({
   useEffect(() => {
     if (assessment && template) {
       const defaultValues = template.checklist.reduce((acc, item) => {
-        const response = assessment.responses.find(r => r.checklistItemId === item.id);
-        // Admin correction takes precedence
-        const correction = assessment.adminCorrections?.find(c => c.checklistItemId === item.id);
+        const response = assessment.responses.find(r => r.checklistItemId === item._id);
+        const correction = assessment.adminCorrections?.find(c => c.checklistItemId === item._id);
         if (correction) {
-          acc[item.id] = correction.correctedAnswer;
+          acc[item._id] = correction.correctedAnswer;
         } else if (response) {
-          acc[item.id] = response.answer;
+          acc[item._id] = response.answer;
         }
         return acc;
       }, {} as Record<string, boolean>);
       form.reset(defaultValues);
     }
-  }, [assessment, template, form]);
+  }, [assessment, template, form, open]);
 
   const onSubmit = (values: FormValues) => {
     if (!assessment || !template) return;
 
     const totalPossibleWeight = template.checklist.reduce((sum, item) => sum + item.weight, 0);
     const earnedWeight = template.checklist.reduce((sum, item) => {
-      if (values[item.id]) {
+      if (values[item._id]) {
         return sum + item.weight;
       }
       return sum;
@@ -105,7 +106,7 @@ export function GradingSheet({
   const handleMarkAllCorrect = () => {
     if (!template) return;
     template.checklist.forEach(item => {
-        form.setValue(item.id as any, true);
+        form.setValue(item._id as any, true);
     });
   }
 
@@ -117,7 +118,7 @@ export function GradingSheet({
             <div>
               <SheetTitle>Validate Submission</SheetTitle>
               <SheetDescription>
-                Reviewing assessment for <span className="font-semibold">{employeeName}</span> on {new Date(assessment.date).toLocaleDateString()}.
+                Reviewing for <span className="font-semibold">{employeeName}</span> on {new Date(assessment.date).toLocaleDateString()}.
               </SheetDescription>
             </div>
             <Button variant="secondary" size="sm" onClick={handleMarkAllCorrect}>Mark All Correct</Button>
@@ -127,10 +128,10 @@ export function GradingSheet({
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
                 <ScrollArea className="flex-1 pr-6 -mr-6">
                     <div className="space-y-6 py-4">
-                      {template.checklist.map((item, index) => {
-                          const employeeResponse = assessment.responses.find(r => r.checklistItemId === item.id)?.answer;
+                      {template.checklist.map((item) => {
+                          const employeeResponse = assessment.responses.find(r => r.checklistItemId === item._id)?.answer;
                           return (
-                            <div key={item.id} className="flex items-center justify-between rounded-lg border p-4">
+                            <div key={item._id} className="flex items-center justify-between rounded-lg border p-4">
                                 <div className="space-y-1.5">
                                     <p className="font-medium">{item.text}</p>
                                     <div className="flex items-center gap-2 text-sm">
@@ -141,13 +142,13 @@ export function GradingSheet({
                                     </div>
                                 </div>
                                 <Controller
-                                    name={item.id}
+                                    name={item._id}
                                     control={form.control}
                                     render={({ field }) => (
                                         <div className="flex flex-col items-center gap-2">
-                                            <Label htmlFor={`switch-${item.id}`} className="text-xs">Correct?</Label>
+                                            <Label htmlFor={`switch-${item._id}`} className="text-xs">Correct?</Label>
                                             <Switch
-                                                id={`switch-${item.id}`}
+                                                id={`switch-${item._id}`}
                                                 checked={field.value}
                                                 onCheckedChange={field.onChange}
                                             />
@@ -165,7 +166,9 @@ export function GradingSheet({
                             Cancel
                         </Button>
                     </SheetClose>
-                    <Button type="submit">Save & Score</Button>
+                    <Button type="submit" disabled={isSaving}>
+                        {isSaving ? 'Saving...' : 'Save & Score'}
+                    </Button>
                 </SheetFooter>
             </form>
         </Form>

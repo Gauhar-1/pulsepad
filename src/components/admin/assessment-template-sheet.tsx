@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { AssessmentTemplate } from '@/lib/definitions';
+import type { AssessmentTemplate, ChecklistItem } from '@/lib/definitions';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,7 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 const formSchema = z.object({
   name: z.string().min(1, 'Template name is required'),
   checklist: z.array(z.object({
-    id: z.string().optional(),
+    _id: z.string().optional(),
     text: z.string().min(1, 'Checklist item text is required'),
     weight: z.coerce.number().min(1, 'Weight must be at least 1'),
   })).min(1, 'At least one checklist item is required'),
@@ -36,8 +36,9 @@ type FormValues = z.infer<typeof formSchema>;
 interface AssessmentTemplateSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (data: Omit<AssessmentTemplate, 'id'>, id?: string) => void;
+  onSave: (data: Omit<AssessmentTemplate, '_id' | 'checklist'> & { checklist: Omit<ChecklistItem, '_id'>[] }, id?: string) => void;
   template: AssessmentTemplate | null;
+  isSaving: boolean;
 }
 
 export function AssessmentTemplateSheet({
@@ -45,9 +46,9 @@ export function AssessmentTemplateSheet({
   onOpenChange,
   onSave,
   template,
+  isSaving,
 }: AssessmentTemplateSheetProps) {
   const isEditMode = !!template;
-  const { toast } = useToast();
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -63,28 +64,30 @@ export function AssessmentTemplateSheet({
   });
 
   useEffect(() => {
-    if (isEditMode && template) {
-      form.reset({
-        name: template.name,
-        checklist: template.checklist.map(item => ({ ...item, id: item.id || `item-${Date.now()}` })),
-      });
-    } else {
-      form.reset({
-        name: '',
-        checklist: [{ text: '', weight: 1 }],
-      });
+    if (open) {
+      if (isEditMode && template) {
+        form.reset({
+          name: template.name,
+          checklist: template.checklist.map(item => ({ ...item })),
+        });
+      } else {
+        form.reset({
+          name: '',
+          checklist: [{ text: '', weight: 1 }],
+        });
+      }
     }
-  }, [template, isEditMode, form, open]); // re-run on open change
+  }, [template, isEditMode, form, open]);
 
   const onSubmit = (values: FormValues) => {
     const templateData = {
         ...values,
         checklist: values.checklist.map(item => ({
-            ...item,
-            id: item.id || `item-${Date.now()}-${Math.random()}`
+            text: item.text,
+            weight: item.weight
         }))
     };
-    onSave(templateData, template?.id);
+    onSave(templateData, template?._id);
   };
 
   return (
@@ -172,7 +175,9 @@ export function AssessmentTemplateSheet({
                         Cancel
                     </Button>
                     </SheetClose>
-                    <Button type="submit">{isEditMode ? 'Save Changes' : 'Create Template'}</Button>
+                    <Button type="submit" disabled={isSaving}>
+                        {isSaving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Template'}
+                    </Button>
                 </SheetFooter>
             </form>
         </Form>
@@ -180,4 +185,3 @@ export function AssessmentTemplateSheet({
     </Sheet>
   );
 }
-

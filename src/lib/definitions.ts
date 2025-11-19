@@ -92,20 +92,22 @@ export type TrainingTask = {
     trainerId: string; // employee id
 }
 
+export type ChecklistItem = {
+  _id: string;
+  text: string;
+  weight: number;
+}
+
 export type AssessmentTemplate = {
-  id: string;
+  _id: string;
   name: string;
-  checklist: {
-    id: string;
-    text: string;
-    weight: number;
-  }[];
+  checklist: ChecklistItem[];
 };
 
 export type DailyAssessment = {
-  id: string;
+  _id: string;
   employeeId: string;
-  templateId: string;
+  templateId: string | AssessmentTemplate;
   date: string; // ISO Date
   status: 'ASSIGNED' | 'SUBMITTED' | 'VALIDATED';
   responses: {
