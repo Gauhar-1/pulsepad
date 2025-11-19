@@ -41,8 +41,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { GradingSheet } from '@/components/admin/grading-sheet';
 
 const fetchAssessmentTemplates = async (): Promise<AssessmentTemplate[]> => {
     const res = await fetch('/api/admin/assessments');
@@ -108,10 +108,13 @@ export default function AdminAssessmentsPage() {
     const queryClient = useQueryClient();
     const { toast } = useToast();
     const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [isGradingSheetOpen, setIsGradingSheetOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState<AssessmentTemplate | null>(null);
     const [selectedAssignmentTemplates, setSelectedAssignmentTemplates] = useState<string[]>([]);
     const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+    const [assessmentToGrade, setAssessmentToGrade] = useState<DailyAssessment | null>(null);
+
 
     const { data: templates = [], isLoading: isLoadingTemplates } = useQuery<AssessmentTemplate[]>({
         queryKey: ['assessment-templates'],
@@ -123,7 +126,7 @@ export default function AdminAssessmentsPage() {
         queryFn: fetchEmployees,
     });
 
-    const { data: assessmentsData, isLoading: isLoadingAssessments } = useQuery<{assessments: DailyAssessment[], templates: AssessmentTemplate[]}>({
+    const { data: assessmentsData, isLoading: isLoadingAssessments, refetch: refetchAssessments } = useQuery<{assessments: DailyAssessment[], templates: AssessmentTemplate[]}>({
         queryKey: ['assessmentsData'],
         queryFn: fetchAssessmentsData,
     });
@@ -160,6 +163,25 @@ export default function AdminAssessmentsPage() {
             setSelectedTemplate(null);
         }
     });
+    
+    const saveGradeMutation = useMutation({
+        mutationFn: async (gradedAssessment: DailyAssessment) => {
+            // In a real app, this would be a POST to an API
+            const currentData = queryClient.getQueryData<{assessments: DailyAssessment[], templates: AssessmentTemplate[]}>(['assessmentsData']);
+            if (!currentData) return;
+
+            const newAssessments = currentData.assessments.map(a => a.id === gradedAssessment.id ? gradedAssessment : a);
+            return { ...currentData, assessments: newAssessments };
+        },
+        onSuccess: (updatedData) => {
+            if(updatedData) {
+                queryClient.setQueryData(['assessmentsData'], updatedData);
+            }
+            toast({ title: "Grade Saved", description: "The assessment has been validated and scored." });
+            setIsGradingSheetOpen(false);
+        }
+    })
+
 
     const handleCreate = () => {
         setSelectedTemplate(null);
@@ -194,8 +216,21 @@ export default function AdminAssessmentsPage() {
         setSelectedAssignmentTemplates([]);
         setSelectedEmployees([]);
     }
+    
+    const handleValidateClick = (assessment: DailyAssessment) => {
+        setAssessmentToGrade(assessment);
+        setIsGradingSheetOpen(true);
+    };
+    
+    const handleSaveGrade = (finalAssessment: DailyAssessment) => {
+        saveGradeMutation.mutate(finalAssessment);
+    }
 
     const getEmployeeName = (id: string) => employees.find(e => e.id === id)?.name || 'Unknown Employee';
+
+    const getTemplateForAssessment = (assessment: DailyAssessment) => {
+        return templates.find(t => t.id === assessment.templateId);
+    }
 
     return (
         <div className="admin-dashboard-gradient min-h-screen p-4 sm:p-8">
@@ -382,7 +417,7 @@ export default function AdminAssessmentsPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         {item.status === 'SUBMITTED' && (
-                                                            <Button variant="outline" size="sm">Validate</Button>
+                                                            <Button variant="outline" size="sm" onClick={() => handleValidateClick(item)}>Validate</Button>
                                                         )}
                                                     </TableCell>
                                                 </TableRow>
@@ -403,6 +438,17 @@ export default function AdminAssessmentsPage() {
                 template={selectedTemplate}
                 onSave={handleSave}
             />
+
+            {assessmentToGrade && (
+                <GradingSheet
+                    open={isGradingSheetOpen}
+                    onOpenChange={setIsGradingSheetOpen}
+                    assessment={assessmentToGrade}
+                    template={getTemplateForAssessment(assessmentToGrade)}
+                    employeeName={getEmployeeName(assessmentToGrade.employeeId)}
+                    onSave={handleSaveGrade}
+                />
+            )}
 
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
