@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ChecklistItem {
     id: string;
@@ -100,35 +101,39 @@ export default function AdminAssessmentsPage() {
 
                         <div className="space-y-4">
                             <Label>Checklist Items</Label>
-                            {checklistItems.map((item, index) => (
-                                <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50">
-                                    <span className="text-sm font-medium">{index + 1}.</span>
-                                    <Input
-                                        placeholder="Enter checklist text..."
-                                        value={item.text}
-                                        onChange={(e) => handleItemChange(item.id, 'text', e.target.value)}
-                                        className="flex-grow"
-                                    />
-                                     <div className="flex items-center gap-2">
-                                        <Label htmlFor={`weight-${item.id}`} className="text-sm">Weight</Label>
-                                        <Input
-                                            id={`weight-${item.id}`}
-                                            type="number"
-                                            value={item.weight}
-                                            onChange={(e) => handleItemChange(item.id, 'weight', parseInt(e.target.value, 10) || 1)}
-                                            className="w-16"
-                                        />
-                                    </div>
-                                    <Button
-                                        variant="destructive"
-                                        size="icon"
-                                        onClick={() => handleRemoveItem(item.id)}
-                                        disabled={checklistItems.length <= 1}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
+                             <ScrollArea className="h-72 w-full rounded-md border p-4">
+                                <div className="space-y-4">
+                                    {checklistItems.map((item, index) => (
+                                        <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50">
+                                            <span className="text-sm font-medium">{index + 1}.</span>
+                                            <Input
+                                                placeholder="Enter checklist text..."
+                                                value={item.text}
+                                                onChange={(e) => handleItemChange(item.id, 'text', e.target.value)}
+                                                className="flex-grow"
+                                            />
+                                            <div className="flex items-center gap-2">
+                                                <Label htmlFor={`weight-${item.id}`} className="text-sm">Weight</Label>
+                                                <Input
+                                                    id={`weight-${item.id}`}
+                                                    type="number"
+                                                    value={item.weight}
+                                                    onChange={(e) => handleItemChange(item.id, 'weight', parseInt(e.target.value, 10) || 1)}
+                                                    className="w-16"
+                                                />
+                                            </div>
+                                            <Button
+                                                variant="destructive"
+                                                size="icon"
+                                                onClick={() => handleRemoveItem(item.id)}
+                                                disabled={checklistItems.length <= 1}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            </ScrollArea>
                             <Button variant="outline" onClick={handleAddItem}>
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 Add Checklist Item
